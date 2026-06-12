@@ -17,7 +17,7 @@ from datetime import datetime
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = f'{ROOT}/data'
-OUT = f'{ROOT}/dashboard.html'
+OUT = f'{ROOT}/index.html'  # named index.html so GitHub Pages serves it as the root page
 
 def read_csv(path):
     if not os.path.exists(path):
@@ -89,6 +89,105 @@ if trends_data and trends_data['summary']:
 
 headline = ' · '.join(headline_bits) if headline_bits else 'No data yet'
 
+# ---------- TM Seatmap panel (computed up-front so it can render first) ----------
+tm_seat_chart = None
+panel_seatmap = ''
+if tm_seat:
+    from datetime import timedelta as _td
+    today_d = datetime.now().date()
+    window_start = today_d.isoformat()
+    window_end = (today_d + _td(days=14)).isoformat()
+
+    by_event = defaultdict(list)
+    for r in tm_seat:
+        if window_start <= r['event_date'] <= window_end:
+            by_event[(r['event_date'], r['event_time'])].append(r)
+
+    rows_per_event = []
+    for key, rows in by_event.items():
+        latest_ts = max(r['poll_ts_utc'] for r in rows)
+        latest = [r for r in rows if r['poll_ts_utc'] == latest_ts]
+        # Real quickpick rows have a price; sellout markers have price=''
+        priced_latest = [r for r in latest if r['price'] not in ('', None)]
+        prices = [float(r['price']) for r in priced_latest]
+        is_sellout = (len(priced_latest) == 0)
+        rows_per_event.append({
+            'date': key[0],
+            'time': key[1][:5],
+            'datetime_label': f"{key[0]} {key[1][:5]}",
+            'face_min': float(latest[0]['face_price_min']) if latest[0]['face_price_min'] not in ('', None) else None,
+            'face_max': float(latest[0]['face_price_max']) if latest[0]['face_price_max'] not in ('', None) else None,
+            'best_avail': min(prices) if prices else None,
+            'qp_count': len(priced_latest),
+            'is_sellout': is_sellout,
+        })
+    rows_per_event.sort(key=lambda r: (r['date'], r['time']))
+
+    scraped_days = sorted({r['date'] for r in rows_per_event})
+    sellouts = [r for r in rows_per_event if r['is_sellout']]
+    total_days = 15
+    avg_best = sum(r['best_avail'] for r in rows_per_event if r['best_avail']) / max(1, len([r for r in rows_per_event if r['best_avail']]))
+    min_best = min((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
+    max_best = max((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
+
+    # Sellout markers placed at the average price so they show up alongside the other data
+    sellout_y = avg_best if avg_best else 100
+
+    tm_seat_chart = {
+        'labels': [r['datetime_label'] for r in rows_per_event],
+        'best_avail': [r['best_avail'] for r in rows_per_event],
+        'face_max': [r['face_max'] for r in rows_per_event],
+        'face_min': [r['face_min'] for r in rows_per_event],
+        # Sellout point per event — null if not a sellout, value if it is
+        'sellout': [sellout_y if r['is_sellout'] else None for r in rows_per_event],
+    }
+
+    # Headline override: lead with the ticket-data summary
+    headline = f'{len(rows_per_event)} shows scraped in next 14d · best-available ${min_best:.0f}–${max_best:.0f} (avg ${avg_best:.0f}) · {len(sellouts)} likely sellouts · ' + headline
+
+    # Build sellout list for inline display
+    sellouts_html = ''
+    if sellouts:
+        sellouts_html = '<h3>Likely sellouts (0 quickpicks after retry)</h3><table><tr><th>Date</th><th>Time</th><th>Face range</th></tr>'
+        for s in sellouts:
+            fmin = f'${s["face_min"]:.0f}' if s['face_min'] else '—'
+            fmax = f'${s["face_max"]:.0f}+' if s['face_max'] else '—'
+            sellouts_html += f'<tr><td>{s["date"]}</td><td>{s["time"]}</td><td>{fmin} – {fmax}</td></tr>'
+        sellouts_html += '</table>'
+
+    panel_seatmap = f"""
+<div class="panel" style="border-left: 4px solid #2563eb;">
+  <div class="panel-title">Wizard of Oz · ticket prices — next 14 days</div>
+  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show. Window: {window_start} → {window_end}.</div>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Shows scraped in window</div>
+      <div class="stat-value">{len(rows_per_event)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Likely sellouts</div>
+      <div class="stat-value" style="color:{'#dc2626' if sellouts else '#1a1a1a'};">{len(sellouts)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Best-available range</div>
+      <div class="stat-value">${min_best:.0f}–${max_best:.0f}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Best-available avg</div>
+      <div class="stat-value">${avg_best:.0f}</div>
+    </div>
+  </div>
+  <h3>Price by show — 14-day window</h3>
+  <div class="chart-container"><canvas id="seatPriceChart"></canvas></div>
+  <div class="meta" style="margin-top:8px;">
+    Each marker = one showtime. <span style="color:#2563eb;">●</span> best available ·
+    <span style="color:#dc2626;">●</span> face max ·
+    <span style="color:#888;">●</span> face min (dashed) ·
+    <span style="color:#dc2626;">✕</span> likely sellout (0 quickpicks).
+  </div>
+  {sellouts_html}
+</div>"""
+
 # ---------- Build HTML ----------
 generated_ts = datetime.now().strftime('%Y-%m-%d %H:%M %Z')
 
@@ -141,8 +240,13 @@ html = f"""<!DOCTYPE html>
 
 <div class="headline">📊 {headline}</div>
 
+{panel_seatmap}
+
+<details style="margin-top: 24px;">
+  <summary style="cursor: pointer; font-size: 13px; color: #555; padding: 8px 0; user-select: none;">Context: schedule, search interest, TM Discovery status (click to expand)</summary>
+
 <div class="panel">
-  <div class="panel-title">1 · Schedule overview (SeatGeek)</div>
+  <div class="panel-title">Schedule overview (SeatGeek)</div>
 """
 
 if sched_data:
@@ -177,7 +281,7 @@ if sched_data:
 else:
     html += '<div class="pending">No schedule data — run pulls/seatgeek.sh</div>'
 
-html += '</div>\n\n<div class="panel"><div class="panel-title">2 · Search interest (Google Trends)</div>'
+html += '</div>\n\n<div class="panel"><div class="panel-title">Search interest (Google Trends)</div>'
 
 if trends_data:
     html += '<table><tr><th>Keyword</th><th style="text-align:right;">Prev 4w avg</th><th style="text-align:right;">Last 4w avg</th><th style="text-align:right;">Δ</th></tr>'
@@ -195,7 +299,7 @@ if trends_data:
 else:
     html += '<div class="pending">No trends data — run pulls/pytrends_pull.py</div>'
 
-html += '</div>\n\n<div class="panel"><div class="panel-title">3 · Ticketmaster Discovery (status + sales windows)</div>'
+html += '</div>\n\n<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div>'
 if tm_disc:
     # Latest poll snapshot
     latest_ts = max(r['poll_ts_utc'] for r in tm_disc)
@@ -248,84 +352,7 @@ else:
     </div>"""
 html += '</div>'
 
-tm_seat_chart = None
-if tm_seat:
-    # Latest poll per event, filtered to a sensible window: yesterday → +30 days
-    from datetime import timedelta as _td
-    today_d = datetime.now().date()
-    window_start = (today_d - _td(days=1)).isoformat()
-    window_end = (today_d + _td(days=30)).isoformat()
-
-    by_event = defaultdict(list)
-    for r in tm_seat:
-        if window_start <= r['event_date'] <= window_end:
-            by_event[(r['event_date'], r['event_time'])].append(r)
-
-    rows_per_event = []
-    for key, rows in by_event.items():
-        latest_ts = max(r['poll_ts_utc'] for r in rows)
-        latest = [r for r in rows if r['poll_ts_utc'] == latest_ts]
-        prices = [float(r['price']) for r in latest if r['price']]
-        rows_per_event.append({
-            'date': key[0],
-            'time': key[1][:5],
-            'datetime_label': f"{key[0]} {key[1][:5]}",
-            'face_min': float(latest[0]['face_price_min']) if latest[0]['face_price_min'] else None,
-            'face_max': float(latest[0]['face_price_max']) if latest[0]['face_price_max'] else None,
-            'best_avail': min(prices) if prices else None,
-            'qp_count': len(latest),
-        })
-    rows_per_event.sort(key=lambda r: (r['date'], r['time']))
-
-    # Coverage stats — how many days in window have at least one scrape?
-    scraped_days = sorted({r['date'] for r in rows_per_event})
-    total_days = 31  # window_start → window_end inclusive
-    coverage_pct = len(scraped_days) / total_days * 100 if total_days else 0
-
-    avg_best = sum(r['best_avail'] for r in rows_per_event if r['best_avail']) / max(1, len([r for r in rows_per_event if r['best_avail']]))
-    min_best = min((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
-    max_best = max((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
-
-    tm_seat_chart = {
-        'labels': [r['datetime_label'] for r in rows_per_event],
-        'best_avail': [r['best_avail'] for r in rows_per_event],
-        'face_max': [r['face_max'] for r in rows_per_event],
-        'face_min': [r['face_min'] for r in rows_per_event],
-    }
-
-    html += f"""
-<div class="panel">
-  <div class="panel-title">3b · TM seatmap — best available + face price (next 30 days)</div>
-  <div class="meta">Scraped via ScrapingBee stealth proxy. Each render returns 40 "best available" quickpick offers per show. Window: {window_start} → {window_end}.</div>
-  <div class="stat-row">
-    <div class="stat">
-      <div class="stat-label">Shows scraped in window</div>
-      <div class="stat-value">{len(rows_per_event)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Days w/ data</div>
-      <div class="stat-value">{len(scraped_days)} / {total_days}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Best-available range</div>
-      <div class="stat-value">${min_best:.0f}–${max_best:.0f}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Best-available avg</div>
-      <div class="stat-value">${avg_best:.0f}</div>
-    </div>
-  </div>
-  <h3>Price over the 30-day forward window</h3>
-  <div class="chart-container"><canvas id="seatPriceChart"></canvas></div>
-  <div class="meta" style="margin-top:8px;">
-    Each marker = one scraped showtime. <span style="color:#2563eb;">●</span> best available ·
-    <span style="color:#dc2626;">●</span> face max ·
-    <span style="color:#888;">●</span> face min.
-    Gaps in the line = days not yet scraped — chart fills in as the daily ScrapingBee batch runs.
-  </div>
-</div>"""
-
-html += '\n\n<div class="panel"><div class="panel-title">4 · Reviews (TripAdvisor)</div>'
+html += '\n\n<div class="panel"><div class="panel-title">Reviews (TripAdvisor)</div>'
 if reviews:
     html += '<div class="pending">TODO: render reviews panel</div>'
 else:
@@ -333,7 +360,7 @@ else:
       Not yet built. ScrapingBee is now in place (same path that unlocks TM) — TripAdvisor scrape
       can be wired in next using <code>stealth_proxy=true</code> against the Sphere attraction page.
     </div>"""
-html += '</div>'
+html += '</div></details>'
 
 # ---------- JS for charts ----------
 chart_data = {
@@ -394,6 +421,7 @@ if (D.tm_seat && D.tm_seat.labels && D.tm_seat.labels.length) {{
           tension: 0.1,
           pointRadius: 4,
           fill: false,
+          spanGaps: true,
         }},
         {{
           label: 'Best available ($)',
@@ -404,6 +432,7 @@ if (D.tm_seat && D.tm_seat.labels && D.tm_seat.labels.length) {{
           tension: 0.1,
           pointRadius: 5,
           fill: false,
+          spanGaps: true,
         }},
         {{
           label: 'Face min ($)',
@@ -415,6 +444,18 @@ if (D.tm_seat && D.tm_seat.labels && D.tm_seat.labels.length) {{
           tension: 0.1,
           pointRadius: 3,
           fill: false,
+          spanGaps: true,
+        }},
+        {{
+          label: 'Likely sellout',
+          data: D.tm_seat.sellout,
+          borderColor: 'transparent',
+          backgroundColor: '#dc2626',
+          showLine: false,
+          pointRadius: 8,
+          pointStyle: 'crossRot',  // an X marker
+          pointBorderWidth: 3,
+          pointBorderColor: '#dc2626',
         }},
       ],
     }},

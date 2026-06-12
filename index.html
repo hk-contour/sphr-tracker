@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sphere demand monitor — Wizard of Oz</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         max-width: 1200px; margin: 0 auto; padding: 24px; color: #1a1a1a;
+         background: #fafafa; line-height: 1.5; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  h2 { margin: 0 0 12px; font-size: 16px; color: #555; font-weight: 500; }
+  h3 { margin: 24px 0 8px; font-size: 14px; color: #333;
+        border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; }
+  .meta { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .headline { background: #fff; border-left: 4px solid #2563eb; padding: 12px 16px;
+               margin-bottom: 24px; font-size: 14px; border-radius: 2px;
+               box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .panel { background: #fff; border-radius: 6px; padding: 16px; margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .panel-title { font-size: 13px; font-weight: 600; color: #333;
+                  margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-row { display: flex; gap: 24px; margin-bottom: 12px; }
+  .stat { flex: 1; }
+  .stat-label { font-size: 11px; color: #888; text-transform: uppercase;
+                 letter-spacing: 0.5px; }
+  .stat-value { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-top: 2px; }
+  .chart-container { position: relative; height: 280px; }
+  .chart-container-small { position: relative; height: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; }
+  th { background: #f5f5f5; font-weight: 600; }
+  .delta-pos { color: #059669; }
+  .delta-neg { color: #dc2626; }
+  .pending { color: #888; font-style: italic; padding: 24px; text-align: center;
+              background: #f5f5f5; border-radius: 4px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>Sphere demand monitor — Wizard of Oz</h1>
+<h2>Daily refresh tracking SPHR's residency demand</h2>
+<div class="meta">Generated 2026-06-12 11:31 </div>
+
+<div class="headline">📊 30 shows scraped in next 14d · best-available $104–$119 (avg $105) · 0 likely sellouts · 504 upcoming showtimes (2026-06-11 → 2026-12-31) · "Sphere Las Vegas" search interest -8% MoM</div>
+
+
+<div class="panel" style="border-left: 4px solid #2563eb;">
+  <div class="panel-title">Wizard of Oz · ticket prices — next 14 days</div>
+  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show. Window: 2026-06-12 → 2026-06-26.</div>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Shows scraped in window</div>
+      <div class="stat-value">30</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Likely sellouts</div>
+      <div class="stat-value" style="color:#1a1a1a;">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Best-available range</div>
+      <div class="stat-value">$104–$119</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Best-available avg</div>
+      <div class="stat-value">$105</div>
+    </div>
+  </div>
+  <h3>Price by show — 14-day window</h3>
+  <div class="chart-container"><canvas id="seatPriceChart"></canvas></div>
+  <div class="meta" style="margin-top:8px;">
+    Each marker = one showtime. <span style="color:#2563eb;">●</span> best available ·
+    <span style="color:#dc2626;">●</span> face max ·
+    <span style="color:#888;">●</span> face min (dashed) ·
+    <span style="color:#dc2626;">✕</span> likely sellout (0 quickpicks).
+  </div>
+  
+</div>
+
+<details style="margin-top: 24px;">
+  <summary style="cursor: pointer; font-size: 13px; color: #555; padding: 8px 0; user-select: none;">Context: schedule, search interest, TM Discovery status (click to expand)</summary>
+
+<div class="panel">
+  <div class="panel-title">Schedule overview (SeatGeek)</div>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Total upcoming showtimes</div>
+      <div class="stat-value">504</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Date range</div>
+      <div class="stat-value" style="font-size:14px;">2026-06-11 → 2026-12-31</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">TM event IDs known</div>
+      <div class="stat-value">454 / 504</div>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div>
+      <h3>Showtimes per month</h3>
+      <div class="chart-container-small"><canvas id="monthChart"></canvas></div>
+    </div>
+    <div>
+      <h3>Showtimes per weekday</h3>
+      <div class="chart-container-small"><canvas id="weekdayChart"></canvas></div>
+    </div>
+  </div>
+  <h3>Time-of-day slots</h3>
+  <div class="chart-container-small"><canvas id="timeChart"></canvas></div>
+</div>
+
+<div class="panel"><div class="panel-title">Search interest (Google Trends)</div><table><tr><th>Keyword</th><th style="text-align:right;">Prev 4w avg</th><th style="text-align:right;">Last 4w avg</th><th style="text-align:right;">Δ</th></tr><tr>
+          <td>Wizard of Oz Sphere</td>
+          <td style="text-align:right;">10.5</td>
+          <td style="text-align:right;">10.0</td>
+          <td style="text-align:right;" class="delta-neg">-5%</td>
+        </tr><tr>
+          <td>Sphere Las Vegas tickets</td>
+          <td style="text-align:right;">3.5</td>
+          <td style="text-align:right;">3.5</td>
+          <td style="text-align:right;" class="delta-pos">+0%</td>
+        </tr><tr>
+          <td>Sphere Las Vegas</td>
+          <td style="text-align:right;">44.0</td>
+          <td style="text-align:right;">40.5</td>
+          <td style="text-align:right;" class="delta-neg">-8%</td>
+        </tr><tr>
+          <td>Sphere Vegas</td>
+          <td style="text-align:right;">48.8</td>
+          <td style="text-align:right;">46.8</td>
+          <td style="text-align:right;" class="delta-neg">-4%</td>
+        </tr></table><h3>Weekly RSV, last 12 months</h3><div class="chart-container"><canvas id="trendsChart"></canvas></div></div>
+
+<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div>
+  <div class="stat-row">
+    <div class="stat">
+      <div class="stat-label">Upcoming events</div>
+      <div class="stat-value">497</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Past events on record</div>
+      <div class="stat-value">4</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Currently <code>onsale</code></div>
+      <div class="stat-value">497</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">With face pricing</div>
+      <div class="stat-value">0 / 497</div>
+    </div>
+  </div>
+  <div class="meta">⚠ Discovery API does not expose face pricing or seat-level availability for this residency. We track status code transitions (onsale → offsale/cancelled) and the population of upcoming events as the daily signal.</div>
+  <h3>Status by month (upcoming events only)</h3>
+  <table><tr><th>Month</th><th style="text-align:right;">onsale</th><th style="text-align:right;">offsale</th><th style="text-align:right;">cancelled</th><th style="text-align:right;">other</th></tr><tr><td>2026-06</td><td style="text-align:right;">51</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-07</td><td style="text-align:right;">82</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-08</td><td style="text-align:right;">81</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-09</td><td style="text-align:right;">75</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-10</td><td style="text-align:right;">72</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-11</td><td style="text-align:right;">65</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-12</td><td style="text-align:right;">71</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr></table><div class="meta" style="margin-top:12px;">Latest poll: 2026-06-11T16:41:56+00:00 · 501 total rows across all polls (signal becomes useful after 2+ weeks of accumulated polling)</div></div>
+
+<div class="panel"><div class="panel-title">Reviews (TripAdvisor)</div><div class="pending">
+      Not yet built. ScrapingBee is now in place (same path that unlocks TM) — TripAdvisor scrape
+      can be wired in next using <code>stealth_proxy=true</code> against the Sphere attraction page.
+    </div></div></details>
+
+<script>
+const D = {"schedule": {"total": 504, "first": "2026-06-11", "last": "2026-12-31", "tm_ids": 454, "months": [{"label": "2026-06", "count": 54}, {"label": "2026-07", "count": 83}, {"label": "2026-08", "count": 81}, {"label": "2026-09", "count": 76}, {"label": "2026-10", "count": 72}, {"label": "2026-11", "count": 67}, {"label": "2026-12", "count": 71}], "weekdays": [{"label": "Mon", "count": 76}, {"label": "Tue", "count": 64}, {"label": "Wed", "count": 69}, {"label": "Thu", "count": 66}, {"label": "Fri", "count": 68}, {"label": "Sat", "count": 62}, {"label": "Sun", "count": 99}], "times": [{"label": "11:00", "count": 98}, {"label": "13:45", "count": 5}, {"label": "14:00", "count": 142}, {"label": "17:00", "count": 134}, {"label": "20:00", "count": 125}], "poll_ts": "2026-06-11T16:09:59+00:00"}, "trends": {"series": {"Wizard of Oz Sphere": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [13, 9, 6, 5, 5, 5, 7, 39, 14, 11, 13, 53, 72, 35, 31, 29, 25, 25, 25, 25, 21, 23, 22, 22, 23, 18, 18, 15, 20, 20, 15, 17, 16, 14, 14, 13, 15, 14, 16, 15, 13, 13, 13, 13, 12, 12, 10, 10, 10, 10, 10, 10, 10]}, "Sphere Las Vegas tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [4, 3, 3, 3, 4, 7, 5, 8, 5, 5, 5, 7, 9, 6, 6, 6, 5, 6, 6, 5, 4, 4, 5, 5, 5, 4, 4, 4, 5, 5, 4, 4, 4, 4, 4, 4, 5, 8, 8, 6, 4, 4, 3, 4, 4, 3, 3, 4, 4, 4, 4, 3, 3]}, "Sphere Las Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [46, 42, 36, 36, 40, 65, 52, 75, 52, 48, 51, 74, 88, 52, 54, 56, 46, 60, 61, 49, 54, 51, 56, 48, 49, 44, 47, 42, 57, 64, 49, 44, 52, 46, 40, 43, 49, 76, 77, 57, 44, 43, 43, 42, 43, 43, 38, 50, 45, 42, 42, 41, 37]}, "Sphere Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [48, 47, 41, 41, 43, 83, 65, 88, 59, 59, 62, 90, 100, 63, 67, 67, 57, 67, 66, 57, 65, 59, 67, 59, 55, 51, 52, 46, 68, 78, 59, 57, 64, 51, 46, 51, 51, 86, 92, 69, 53, 47, 49, 49, 49, 47, 44, 51, 53, 47, 50, 45, 45]}}, "summary": [{"kw": "Wizard of Oz Sphere", "last4": 10.0, "prev4": 10.5, "delta": -4.761904761904762}, {"kw": "Sphere Las Vegas tickets", "last4": 3.5, "prev4": 3.5, "delta": 0.0}, {"kw": "Sphere Las Vegas", "last4": 40.5, "prev4": 44.0, "delta": -7.954545454545454}, {"kw": "Sphere Vegas", "last4": 46.75, "prev4": 48.75, "delta": -4.102564102564102}], "poll_ts": "2026-06-11T16:04:00+00:00"}, "tm_seat": {"labels": ["2026-06-12 11:00", "2026-06-12 14:00", "2026-06-13 11:00", "2026-06-13 14:00", "2026-06-14 11:00", "2026-06-14 14:00", "2026-06-14 17:00", "2026-06-14 20:00", "2026-06-15 14:00", "2026-06-15 17:00", "2026-06-15 20:00", "2026-06-16 14:00", "2026-06-16 17:00", "2026-06-16 20:00", "2026-06-17 17:00", "2026-06-17 20:00", "2026-06-18 17:00", "2026-06-18 20:00", "2026-06-19 11:00", "2026-06-19 14:00", "2026-06-20 11:00", "2026-06-21 11:00", "2026-06-22 17:00", "2026-06-23 14:00", "2026-06-23 17:00", "2026-06-23 20:00", "2026-06-24 14:00", "2026-06-25 14:00", "2026-06-26 11:00", "2026-06-26 14:00"], "best_avail": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 119.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0], "face_max": [349.0, 349.0, 349.0, 342.0, 342.0, 342.0, 342.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 299.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0], "face_min": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0], "sellout": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]}};
+
+if (D.schedule && D.schedule.months) {
+  new Chart(document.getElementById('monthChart'), {
+    type: 'bar',
+    data: {
+      labels: D.schedule.months.map(m => m.label),
+      datasets: [{ label: 'Shows', data: D.schedule.months.map(m => m.count),
+                   backgroundColor: '#2563eb' }],
+    },
+    options: { plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } } },
+  });
+  new Chart(document.getElementById('weekdayChart'), {
+    type: 'bar',
+    data: {
+      labels: D.schedule.weekdays.map(d => d.label),
+      datasets: [{ label: 'Shows', data: D.schedule.weekdays.map(d => d.count),
+                   backgroundColor: '#059669' }],
+    },
+    options: { plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } } },
+  });
+  new Chart(document.getElementById('timeChart'), {
+    type: 'bar',
+    data: {
+      labels: D.schedule.times.map(t => t.label),
+      datasets: [{ label: 'Shows', data: D.schedule.times.map(t => t.count),
+                   backgroundColor: '#7c3aed' }],
+    },
+    options: { plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } } },
+  });
+}
+
+if (D.tm_seat && D.tm_seat.labels && D.tm_seat.labels.length) {
+  new Chart(document.getElementById('seatPriceChart'), {
+    type: 'line',
+    data: {
+      labels: D.tm_seat.labels,
+      datasets: [
+        {
+          label: 'Face max ($)',
+          data: D.tm_seat.face_max,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220,38,38,0.05)',
+          borderWidth: 2,
+          tension: 0.1,
+          pointRadius: 4,
+          fill: false,
+          spanGaps: true,
+        },
+        {
+          label: 'Best available ($)',
+          data: D.tm_seat.best_avail,
+          borderColor: '#2563eb',
+          backgroundColor: 'rgba(37,99,235,0.1)',
+          borderWidth: 2,
+          tension: 0.1,
+          pointRadius: 5,
+          fill: false,
+          spanGaps: true,
+        },
+        {
+          label: 'Face min ($)',
+          data: D.tm_seat.face_min,
+          borderColor: '#888',
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderDash: [4, 4],
+          tension: 0.1,
+          pointRadius: 3,
+          fill: false,
+          spanGaps: true,
+        },
+        {
+          label: 'Likely sellout',
+          data: D.tm_seat.sellout,
+          borderColor: 'transparent',
+          backgroundColor: '#dc2626',
+          showLine: false,
+          pointRadius: 8,
+          pointStyle: 'crossRot',  // an X marker
+          pointBorderWidth: 3,
+          pointBorderColor: '#dc2626',
+        },
+      ],
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { beginAtZero: false, title: { display: true, text: 'Price ($)' } },
+        x: { ticks: { maxRotation: 45, minRotation: 30 } },
+      },
+    },
+  });
+}
+
+if (D.trends && D.trends.series) {
+  const kws = Object.keys(D.trends.series);
+  const colors = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed'];
+  const firstKw = kws[0];
+  const labels = D.trends.series[firstKw].weeks;
+  new Chart(document.getElementById('trendsChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: kws.map((kw, i) => ({
+        label: kw,
+        data: D.trends.series[kw].rsv,
+        borderColor: colors[i % colors.length],
+        backgroundColor: 'transparent',
+        tension: 0.2,
+        pointRadius: 0,
+        borderWidth: 2,
+      })),
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { beginAtZero: true, max: 100, title: { display: true, text: 'RSV (0-100)' } },
+        x: { ticks: { maxTicksLimit: 12 } },
+      },
+    },
+  });
+}
+</script>
+</body>
+</html>

@@ -9,12 +9,15 @@ Per render (~25 credits with stealth proxy):
 
 Output: data/tm_seatmap_history.csv (append-only — one row per (event, poll, quickpick))
 """
-import os, csv, re, sys
+import os, csv, re, sys, threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
 import http.client
 http.client._MAXHEADERS = 1000  # ScrapingBee can return many headers
 import requests
+
+_csv_lock = threading.Lock()
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 OUT_CSV = f'{ROOT}/data/tm_seatmap_history.csv'
@@ -94,41 +97,72 @@ def parse(html, event_meta):
 def append_rows(rows):
     if not rows:
         return
-    header_needed = not os.path.exists(OUT_CSV) or os.path.getsize(OUT_CSV) == 0
-    with open(OUT_CSV, 'a', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=rows[0].keys())
-        if header_needed:
-            w.writeheader()
-        w.writerows(rows)
+    with _csv_lock:
+        header_needed = not os.path.exists(OUT_CSV) or os.path.getsize(OUT_CSV) == 0
+        with open(OUT_CSV, 'a', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=rows[0].keys())
+            if header_needed:
+                w.writeheader()
+            w.writerows(rows)
+
+def append_zero_marker(meta, face_min='', face_max=''):
+    """Mark a 0-quickpick event in the CSV so the chart can show it as a sellout."""
+    poll_ts = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    row = {
+        'poll_ts_utc': poll_ts,
+        'tm_event_url': meta['url'],
+        'event_date': meta['date'],
+        'event_time': meta['time'],
+        'section': '', 'row': '', 'ticket_type': '',
+        'price': '', 'is_sold_out': True,
+        'face_price_min': face_min, 'face_price_max': face_max,
+    }
+    append_rows([row])
 
 def scrape_event(e, idx, total):
     meta = {'url': e['url'], 'date': e['local_date'], 'time': e['local_time']}
-    print(f'[{idx+1}/{total}] {meta["date"]} {meta["time"]} ...', end=' ', flush=True)
     try:
         r = render(meta['url'])
     except Exception as ex:
-        print(f'⚠ render error: {ex}')
+        print(f'[{idx+1}/{total}] {meta["date"]} {meta["time"]} ⚠ render error: {ex}')
         return 0
     if r.status_code != 200:
-        print(f'⚠ HTTP {r.status_code}')
+        print(f'[{idx+1}/{total}] {meta["date"]} {meta["time"]} ⚠ HTTP {r.status_code}')
         return 0
     rows, summary = parse(r.text, meta)
-    append_rows(rows)
-    bestprice = min((row['price'] for row in rows if row['price']), default=None)
-    print(f'{len(rows)} qp · face ${summary["price_min"]}–${summary["price_max"]}+ · best ${bestprice}')
+    # Retry once with longer wait if we got 0 quickpicks — disambiguates render-miss vs real sellout
+    if not rows:
+        try:
+            r2 = render(meta['url'], wait_ms=15000)
+            if r2.status_code == 200:
+                rows, summary = parse(r2.text, meta)
+        except Exception:
+            pass
+
+    if rows:
+        append_rows(rows)
+        bestprice = min((row['price'] for row in rows if row['price']), default=None)
+        print(f'[{idx+1}/{total}] {meta["date"]} {meta["time"]} → {len(rows)} qp · face ${summary["price_min"]}–${summary["price_max"]}+ · best ${bestprice}')
+    else:
+        # Persist the zero-quickpick fact so we can chart it as a sellout
+        append_zero_marker(meta, summary.get('price_min', ''), summary.get('price_max', ''))
+        print(f'[{idx+1}/{total}] {meta["date"]} {meta["time"]} → 0 qp (sellout? face ${summary["price_min"]}–${summary["price_max"]}+)')
     return len(rows)
 
 def main():
     """
-    Default: scrape ALL upcoming shows in the next 30 days.
+    Default: scrape ALL upcoming shows in the next 14 days.
     CLI overrides:
-      --days N      : forward window in days (default 30)
-      --max N       : cap number of events scraped (for credit budgeting)
-      --index N     : scrape a single event by index (for testing)
+      --days N              : forward window in days (default 14)
+      --max N               : cap number of events scraped (for credit budgeting)
+      --index N             : scrape a single event by index (for testing)
+      --skip-polled-today   : skip events that already have a poll dated today
     """
-    days = 30
+    days = 14
     cap = None
     single_idx = None
+    skip_polled_today = False
+    workers = 8  # ScrapingBee Freelance allows max_concurrency=10; leave headroom
     args = sys.argv[1:]
     i = 0
     while i < len(args):
@@ -139,8 +173,11 @@ def main():
             cap = int(args[i+1]); i += 2
         elif a == '--index':
             single_idx = int(args[i+1]); i += 2
+        elif a == '--workers':
+            workers = int(args[i+1]); i += 2
+        elif a == '--skip-polled-today':
+            skip_polled_today = True; i += 1
         else:
-            # legacy: bare integer = index
             try:
                 single_idx = int(a); i += 1
             except ValueError:
@@ -160,13 +197,26 @@ def main():
         scrape_event(upcoming[single_idx], single_idx, len(upcoming))
         return
 
+    if skip_polled_today and os.path.exists(OUT_CSV):
+        today_iso = today_d.isoformat()
+        already = set()
+        with open(OUT_CSV) as f:
+            for row in csv.DictReader(f):
+                if row['poll_ts_utc'].startswith(today_iso):
+                    already.add((row['event_date'], row['event_time']))
+        before = len(upcoming)
+        upcoming = [e for e in upcoming if (e['local_date'], e['local_time']) not in already]
+        print(f'Skipping {before - len(upcoming)} events already polled today\n')
+
     if cap:
         upcoming = upcoming[:cap]
 
-    print(f'Scraping {len(upcoming)} events in window {today} → {horizon}\n')
+    print(f'Scraping {len(upcoming)} events in window {today} → {horizon}  (workers={workers})\n')
     total_qp = 0
-    for i, e in enumerate(upcoming):
-        total_qp += scrape_event(e, i, len(upcoming))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(scrape_event, e, i, len(upcoming)): i for i, e in enumerate(upcoming)}
+        for f in as_completed(futures):
+            total_qp += f.result() or 0
     print(f'\nDone. {total_qp} total quickpick rows appended → {OUT_CSV}')
 
 if __name__ == '__main__':

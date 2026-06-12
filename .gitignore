@@ -10,7 +10,7 @@ data/scrapingbee_state_*.json
 # (revisit if we want git-tracked history)
 data/*.csv
 
-# Generated dashboard
+# Old dashboard filename (now generates as index.html for GitHub Pages)
 dashboard.html
 
 # Python
