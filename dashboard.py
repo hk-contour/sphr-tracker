@@ -6,7 +6,7 @@ Reads:
   data/seatgeek_schedule.csv     (required)
   data/pytrends_history.csv      (optional)
   data/tm_discovery_history.csv  (optional)
-  data/tripadvisor_reviews.csv   (optional)
+  data/tm_seatmap_history.csv    (optional, headline panel)
 
 Writes:
   dashboard.html — single-file static report with Chart.js via CDN.
@@ -29,7 +29,6 @@ schedule = read_csv(f'{DATA}/seatgeek_schedule.csv')
 trends = read_csv(f'{DATA}/pytrends_history.csv')
 tm_disc = read_csv(f'{DATA}/tm_discovery_history.csv')
 tm_seat = read_csv(f'{DATA}/tm_seatmap_history.csv')
-reviews = read_csv(f'{DATA}/tripadvisor_reviews.csv')
 
 # ---------- Schedule panel ----------
 sched_data = {}
@@ -54,13 +53,13 @@ trends_data = {}
 if trends:
     by_kw = defaultdict(list)
     for r in trends:
-        by_kw[r['keyword']].append((r['week_start'], int(r['rsv'])))
+        by_kw[r['keyword']].append((r['week_start'], float(r['rsv'])))
     series = {}
     for kw, pts in by_kw.items():
         pts.sort()
         series[kw] = {
             'weeks': [p[0] for p in pts],
-            'rsv': [p[1] for p in pts],
+            'rsv': [round(p[1], 1) for p in pts],
         }
     # Compute the headline 4w vs prior 4w delta for each keyword
     summary = []
@@ -70,7 +69,14 @@ if trends:
         if len(vals) >= 8:
             last4, prev4 = sum(vals[-4:])/4, sum(vals[-8:-4])/4
             delta = (last4 - prev4) / prev4 * 100 if prev4 else 0
-            summary.append({'kw': kw, 'last4': last4, 'prev4': prev4, 'delta': delta})
+            summary.append({
+                'kw': kw,
+                'last4': round(last4, 1),
+                'prev4': round(prev4, 1),
+                'delta': round(delta, 1),
+            })
+    # Sort by current interest level (last4 avg, descending)
+    summary.sort(key=lambda s: -s['last4'])
     trends_data = {
         'series': series,
         'summary': summary,
@@ -244,6 +250,7 @@ html = f"""<!DOCTYPE html>
 
 <div class="panel">
   <div class="panel-title">Schedule overview (SeatGeek)</div>
+  <div class="meta">The supply side: every Wizard of Oz showtime Sphere has scheduled. This is the denominator we'd scrape ticket prices for. "TM Event IDs known" = how many shows we have Ticketmaster's internal ID for (needed to scrape).</div>
 """
 
 if sched_data:
@@ -281,7 +288,15 @@ else:
 html += '</div>\n\n<div class="panel"><div class="panel-title">Search interest (Google Trends)</div>'
 
 if trends_data:
-    html += '<table><tr><th>Keyword</th><th style="text-align:right;">Prev 4w avg</th><th style="text-align:right;">Last 4w avg</th><th style="text-align:right;">Δ</th></tr>'
+    html += '<div class="meta">Relative Search Volume (RSV, 0–100) from Google Trends — measures search interest, not absolute volume. All 9 keywords normalized to a common scale via the "Sphere Las Vegas" anchor.</div>'
+
+    # === Current snapshot bar chart ===
+    html += '<h3>Current 4-week avg interest, ranked</h3>'
+    html += '<div class="chart-container-small"><canvas id="trendsBarChart"></canvas></div>'
+
+    # === Deltas table ===
+    html += '<h3>4-week MoM change per keyword</h3>'
+    html += '<table><tr><th>Keyword</th><th style="text-align:right;">Prev 4w avg</th><th style="text-align:right;">Last 4w avg</th><th style="text-align:right;">Δ MoM</th></tr>'
     for s in trends_data['summary']:
         cls = 'delta-pos' if s['delta'] >= 0 else 'delta-neg'
         sign = '+' if s['delta'] >= 0 else ''
@@ -292,11 +307,29 @@ if trends_data:
           <td style="text-align:right;" class="{cls}">{sign}{s['delta']:.0f}%</td>
         </tr>"""
     html += '</table>'
-    html += '<h3>Weekly RSV, last 12 months</h3><div class="chart-container"><canvas id="trendsChart"></canvas></div>'
+
+    # === 12-month line chart (all keywords overlaid) ===
+    html += '<h3>Weekly RSV — all keywords, 12-month trend</h3>'
+    html += '<div class="chart-container"><canvas id="trendsChart"></canvas></div>'
+
+    # === Sparkline grid — one mini-chart per keyword ===
+    html += '<h3>Per-keyword sparklines (12-month, scaled to its own range)</h3>'
+    html += '<div class="meta">Each tile scaled to its own min/max so the SHAPE of demand for each keyword is visible — not absolute level.</div>'
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px;">'
+    for i, s in enumerate(trends_data['summary']):
+        html += f"""
+        <div style="background:#fafafa;border-radius:4px;padding:8px;">
+          <div style="font-size:11px;color:#555;display:flex;justify-content:space-between;align-items:baseline;">
+            <span style="font-weight:600;">{s['kw']}</span>
+            <span class="{'delta-pos' if s['delta'] >= 0 else 'delta-neg'}">{'+' if s['delta'] >= 0 else ''}{s['delta']:.0f}%</span>
+          </div>
+          <div style="height:60px;position:relative;"><canvas id="sparkline-{i}"></canvas></div>
+        </div>"""
+    html += '</div>'
 else:
     html += '<div class="pending">No trends data — run pulls/pytrends_pull.py</div>'
 
-html += '</div>\n\n<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div>'
+html += '</div>\n\n<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div><div class="meta">Slow-moving supply signal from Ticketmaster\'s free public API. Tracks how many shows are <code>onsale</code> vs <code>offsale</code>/<code>cancelled</code> per month. Becomes useful when shows start flipping <code>onsale → offsale</code> (sales window closing or sold out). Today all 497 upcoming shows are <code>onsale</code>.</div>'
 if tm_disc:
     # Latest poll snapshot
     latest_ts = max(r['poll_ts_utc'] for r in tm_disc)
@@ -349,20 +382,14 @@ else:
     </div>"""
 html += '</div>'
 
-html += '\n\n<div class="panel"><div class="panel-title">Reviews (TripAdvisor)</div>'
-if reviews:
-    html += '<div class="pending">TODO: render reviews panel</div>'
-else:
-    html += """<div class="pending">
-      Not yet built. ScrapingBee is now in place (same path that unlocks TM) — TripAdvisor scrape
-      can be wired in next using <code>stealth_proxy=true</code> against the Sphere attraction page.
-    </div>"""
-html += '</div>'
 
 # ---------- JS for charts ----------
 chart_data = {
     'schedule': sched_data,
-    'trends': trends_data,
+    'trends': {
+        **trends_data,
+        'summary': trends_data.get('summary', []),
+    } if trends_data else None,
     'tm_seat': tm_seat_chart,
 }
 html += f"""
@@ -466,11 +493,35 @@ if (D.tm_seat && D.tm_seat.labels && D.tm_seat.labels.length) {{
   }});
 }}
 
-if (D.trends && D.trends.series) {{
-  const kws = Object.keys(D.trends.series);
-  const colors = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed'];
-  const firstKw = kws[0];
-  const labels = D.trends.series[firstKw].weeks;
+if (D.trends && D.trends.series && D.trends.summary) {{
+  const summary = D.trends.summary;
+  // 9-color palette (one per keyword)
+  const colors = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed',
+                  '#0891b2', '#db2777', '#65a30d', '#a16207'];
+
+  // -------- Bar chart: current 4w avg per keyword, ranked --------
+  new Chart(document.getElementById('trendsBarChart'), {{
+    type: 'bar',
+    data: {{
+      labels: summary.map(s => s.kw),
+      datasets: [{{
+        label: 'Last 4w avg RSV',
+        data: summary.map(s => s.last4),
+        backgroundColor: summary.map(s => s.delta >= 0 ? '#059669' : '#dc2626'),
+      }}],
+    }},
+    options: {{
+      indexAxis: 'y',
+      plugins: {{ legend: {{ display: false }} }},
+      scales: {{
+        x: {{ beginAtZero: true, title: {{ display: true, text: 'RSV (0-100)' }} }},
+      }},
+    }},
+  }});
+
+  // -------- Main 12-month line chart, all 9 keywords --------
+  const kws = summary.map(s => s.kw);  // ordered by current interest
+  const labels = D.trends.series[kws[0]].weeks;
   new Chart(document.getElementById('trendsChart'), {{
     type: 'line',
     data: {{
@@ -486,12 +537,42 @@ if (D.trends && D.trends.series) {{
       }})),
     }},
     options: {{
-      plugins: {{ legend: {{ position: 'bottom' }} }},
+      plugins: {{ legend: {{ position: 'bottom', labels: {{ boxWidth: 12, font: {{ size: 11 }} }} }} }},
       scales: {{
-        y: {{ beginAtZero: true, max: 100, title: {{ display: true, text: 'RSV (0-100)' }} }},
+        y: {{ beginAtZero: true, title: {{ display: true, text: 'RSV (0-100)' }} }},
         x: {{ ticks: {{ maxTicksLimit: 12 }} }},
       }},
     }},
+  }});
+
+  // -------- Sparkline grid, one per keyword --------
+  kws.forEach((kw, i) => {{
+    const canvas = document.getElementById('sparkline-' + i);
+    if (!canvas) return;
+    const rsv = D.trends.series[kw].rsv;
+    new Chart(canvas, {{
+      type: 'line',
+      data: {{
+        labels: rsv.map((_, j) => j),
+        datasets: [{{
+          data: rsv,
+          borderColor: colors[i % colors.length],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 1.5,
+        }}],
+      }},
+      options: {{
+        plugins: {{ legend: {{ display: false }}, tooltip: {{ enabled: false }} }},
+        scales: {{
+          y: {{ display: false }},
+          x: {{ display: false }},
+        }},
+        elements: {{ point: {{ radius: 0 }} }},
+        maintainAspectRatio: false,
+      }},
+    }});
   }});
 }}
 </script>
