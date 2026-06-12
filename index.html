@@ -43,7 +43,7 @@
 
 <h1>Sphere demand monitor — Wizard of Oz</h1>
 <h2>Daily refresh tracking SPHR's residency demand</h2>
-<div class="meta">Generated 2026-06-12 11:58 </div>
+<div class="meta">Generated 2026-06-12 12:07 </div>
 
 <div class="headline">📊 39 shows scraped in next 14d · best-available $104–$119 (avg $105) · 0 likely sellouts · 504 upcoming showtimes (2026-06-11 → 2026-12-31) · "Sphere Las Vegas" search interest -6% MoM</div>
 
@@ -101,6 +101,436 @@
   <h3>Section coverage (which sections appear most often in best-available)</h3>
   <div class="meta">Shows the sections feeding the "best available" pool — sections at the top of this list have the most unsold low-tier inventory across upcoming shows. (Premium sections rarely appear because they're not the cheapest tier.)</div>
   <table><tr><th>Section</th><th style="text-align:right;">Shows w/ best-available inventory here</th></tr><tr><td>Sec 407</td><td style="text-align:right;">665</td></tr><tr><td>Sec 405</td><td style="text-align:right;">636</td></tr><tr><td>Sec 406</td><td style="text-align:right;">96</td></tr><tr><td>Sec 205</td><td style="text-align:right;">24</td></tr><tr><td>Sec 404</td><td style="text-align:right;">22</td></tr><tr><td>Sec 207</td><td style="text-align:right;">18</td></tr><tr><td>Sec 204</td><td style="text-align:right;">12</td></tr><tr><td>Sec 208</td><td style="text-align:right;">12</td></tr><tr><td>Sec 308</td><td style="text-align:right;">9</td></tr></table>
+
+  <h3>Quickpick stats across all shows (1,494 scraped offers)</h3>
+  <div class="meta">These aggregate over <em>every</em> quickpick we've scraped (40-ish per show × 39 shows), not just the lowest price per show.</div>
+  <div class="stat-row" style="margin-top:8px;">
+    <div class="stat">
+      <div class="stat-label">Avg quickpick price (across all)</div>
+      <div class="stat-value">$106</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Quickpick min / max</div>
+      <div class="stat-value">$104 / $124</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Shows with price spread &gt; $0</div>
+      <div class="stat-value">34 / 39</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg face max (premium ceiling)</div>
+      <div class="stat-value">$347+</div>
+    </div>
+  </div>
+
+  <h3>Price spread per show (high − low of the 40 quickpicks)</h3>
+  <div class="meta">Most shows show $0 spread (all 40 quickpicks at the same lowest tier). When this rises above $0, the lowest tier is starting to deplete and quickpicks include some higher-priced offers.</div>
+  <div class="chart-container-small"><canvas id="spreadChart"></canvas></div>
+
+  <h3>Per-show quickpick stats</h3>
+  <div class="meta">Detail table — useful for finding the outliers. Sorted by date.</div>
+  <table>
+    <tr>
+      <th>Date</th><th>Time</th>
+      <th style="text-align:right;">Best</th>
+      <th style="text-align:right;">Avg of 40</th>
+      <th style="text-align:right;">Median</th>
+      <th style="text-align:right;">Max of 40</th>
+      <th style="text-align:right;">Spread</th>
+      <th style="text-align:right;">Distinct prices</th>
+      <th style="text-align:right;">Sections</th>
+      <th style="text-align:right;">Face max</th>
+    </tr><tr>
+            <td>2026-06-12</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">4</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-12</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$108</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$114</td>
+            <td style="text-align:right;" class="delta-pos">$10</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">4</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-13</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$114</td>
+            <td style="text-align:right;" class="delta-pos">$10</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-13</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$342+</td>
+          </tr><tr>
+            <td>2026-06-14</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$342+</td>
+          </tr><tr>
+            <td>2026-06-14</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$342+</td>
+          </tr><tr>
+            <td>2026-06-14</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$342+</td>
+          </tr><tr>
+            <td>2026-06-14</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;" class="">$0</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-15</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-15</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-15</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-16</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;" class="">$0</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-16</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-16</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-17</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">4</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-17</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$107</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$299+</td>
+          </tr><tr>
+            <td>2026-06-18</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-18</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$107</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-19</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-19</td><td>14:00</td>
+            <td style="text-align:right;">$119</td>
+            <td style="text-align:right;">$120</td>
+            <td style="text-align:right;">$119</td>
+            <td style="text-align:right;">$124</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">5</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-20</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-20</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$107</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-21</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-21</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-21</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">4</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-21</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-22</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;" class="">$0</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-22</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-22</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-23</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;" class="">$0</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-23</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-23</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;" class="">$0</td>
+            <td style="text-align:right;">1</td>
+            <td style="text-align:right;">3</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-24</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-24</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">4</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-25</td><td>14:00</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$110</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$114</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-25</td><td>17:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$107</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-25</td><td>20:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$105</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$347+</td>
+          </tr><tr>
+            <td>2026-06-26</td><td>11:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$106</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr><tr>
+            <td>2026-06-26</td><td>14:00</td>
+            <td style="text-align:right;">$104</td>
+            <td style="text-align:right;">$107</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;">$109</td>
+            <td style="text-align:right;" class="delta-pos">$5</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">2</td>
+            <td style="text-align:right;">$349+</td>
+          </tr></table>
 
   
 </div>
@@ -268,7 +698,7 @@
   <table><tr><th>Month</th><th style="text-align:right;">onsale</th><th style="text-align:right;">offsale</th><th style="text-align:right;">cancelled</th><th style="text-align:right;">other</th></tr><tr><td>2026-06</td><td style="text-align:right;">51</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-07</td><td style="text-align:right;">82</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-08</td><td style="text-align:right;">81</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-09</td><td style="text-align:right;">75</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-10</td><td style="text-align:right;">72</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-11</td><td style="text-align:right;">65</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr><tr><td>2026-12</td><td style="text-align:right;">71</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td><td style="text-align:right;">0</td></tr></table><div class="meta" style="margin-top:12px;">Latest poll: 2026-06-11T16:41:56+00:00 · 501 total rows across all polls (signal becomes useful after 2+ weeks of accumulated polling)</div></div>
 
 <script>
-const D = {"schedule": {"total": 504, "first": "2026-06-11", "last": "2026-12-31", "tm_ids": 454, "months": [{"label": "2026-06", "count": 54}, {"label": "2026-07", "count": 83}, {"label": "2026-08", "count": 81}, {"label": "2026-09", "count": 76}, {"label": "2026-10", "count": 72}, {"label": "2026-11", "count": 67}, {"label": "2026-12", "count": 71}], "weekdays": [{"label": "Mon", "count": 76}, {"label": "Tue", "count": 64}, {"label": "Wed", "count": 69}, {"label": "Thu", "count": 66}, {"label": "Fri", "count": 68}, {"label": "Sat", "count": 62}, {"label": "Sun", "count": 99}], "times": [{"label": "11:00", "count": 98}, {"label": "13:45", "count": 5}, {"label": "14:00", "count": 142}, {"label": "17:00", "count": 134}, {"label": "20:00", "count": 125}], "poll_ts": "2026-06-11T16:09:59+00:00"}, "trends": {"series": {"Sphere Las Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [43.0, 43.0, 35.0, 35.0, 39.0, 57.0, 51.0, 74.0, 52.0, 50.0, 48.0, 77.0, 86.0, 53.0, 59.0, 52.0, 51.0, 56.0, 55.0, 49.0, 51.0, 53.0, 53.0, 45.0, 52.0, 44.0, 46.0, 43.0, 54.0, 64.0, 49.0, 48.0, 46.0, 45.0, 43.0, 43.0, 48.0, 77.0, 79.0, 56.0, 46.0, 45.0, 42.0, 40.0, 42.0, 40.0, 37.0, 44.0, 47.0, 40.0, 42.0, 38.0, 37.0]}, "Sphere Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [49.0, 43.0, 41.0, 40.0, 45.0, 79.0, 63.0, 88.0, 61.0, 56.0, 59.0, 87.0, 100.0, 64.0, 64.0, 63.0, 53.0, 59.0, 67.0, 57.0, 61.0, 57.0, 64.0, 54.0, 56.0, 49.0, 51.0, 44.0, 64.0, 78.0, 58.0, 54.0, 54.0, 49.0, 49.0, 50.0, 55.0, 85.0, 89.0, 62.0, 52.0, 45.0, 47.0, 50.0, 45.0, 46.0, 41.0, 52.0, 49.0, 45.0, 49.0, 43.0, 43.0]}, "Sphere Las Vegas tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [4.0, 3.0, 3.0, 3.0, 4.0, 6.0, 5.0, 8.0, 5.0, 4.0, 5.0, 7.0, 9.0, 6.0, 5.0, 6.0, 5.0, 6.0, 6.0, 5.0, 4.0, 4.0, 5.0, 5.0, 5.0, 4.0, 4.0, 4.0, 5.0, 5.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 5.0, 8.0, 8.0, 6.0, 4.0, 4.0, 3.0, 4.0, 4.0, 3.0, 3.0, 4.0, 4.0, 3.0, 4.0, 3.0, 3.0]}, "Wizard of Oz Sphere": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [13.0, 9.0, 5.0, 5.0, 5.0, 5.0, 7.0, 35.0, 14.0, 11.0, 13.0, 48.0, 76.0, 36.0, 31.0, 28.0, 25.0, 25.0, 25.0, 25.0, 21.0, 22.0, 21.0, 21.0, 23.0, 18.0, 17.0, 15.0, 20.0, 20.0, 15.0, 17.0, 16.0, 14.0, 13.0, 13.0, 15.0, 14.0, 15.0, 14.0, 13.0, 13.0, 13.0, 12.0, 12.0, 12.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 9.0]}, "Sphere tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [9.0, 7.0, 6.0, 6.0, 8.0, 17.0, 14.0, 20.0, 14.0, 15.0, 19.0, 23.0, 26.0, 15.0, 15.0, 17.0, 12.0, 14.0, 20.0, 14.0, 10.0, 12.0, 12.0, 11.0, 11.0, 12.0, 12.0, 10.0, 12.0, 13.0, 10.0, 11.0, 10.0, 10.0, 10.0, 13.0, 13.0, 35.0, 41.0, 22.0, 13.0, 11.0, 10.0, 10.0, 10.0, 10.0, 8.0, 13.0, 13.0, 9.0, 10.0, 10.0, 9.0]}, "Sphere show": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [2.6, 2.6, 2.6, 3.4, 2.6, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 5.2, 6.0, 4.3, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 3.4, 4.3, 4.3, 4.3, 5.2, 4.3, 4.3, 3.4, 6.0, 5.2, 5.2, 4.3, 4.3, 4.3, 5.2, 6.0, 5.2, 6.0, 6.9, 6.0, 5.2, 4.3, 5.2, 4.3, 4.3, 4.3, 4.3, 5.2, 4.3, 4.3, 4.3, 3.4, 3.4]}, "Wizard of Oz tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [2.6, 1.7, 0.9, 0.9, 0.9, 0.9, 0.9, 6.9, 2.6, 1.7, 1.7, 10.3, 17.2, 6.9, 6.0, 4.3, 5.2, 4.3, 4.3, 4.3, 3.4, 5.2, 4.3, 4.3, 4.3, 3.4, 3.4, 2.6, 3.4, 3.4, 2.6, 3.4, 2.6, 2.6, 3.4, 2.6, 2.6, 3.4, 3.4, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]}, "Wizard of Oz movie": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 4.3, 4.3, 4.3, 3.4, 5.2, 6.9, 4.3, 5.2, 6.0, 5.2, 5.2, 5.2, 6.0, 6.9, 6.9, 6.9, 14.6, 26.7, 11.2, 8.6, 6.9, 10.3, 7.7, 6.0, 6.0, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 3.4, 3.4, 4.3, 4.3, 3.4, 4.3, 4.3, 3.4, 4.3, 4.3, 4.3, 3.4, 3.4, 3.4, 3.4]}}, "summary": [{"kw": "Sphere Vegas", "last4": 45.0, "prev4": 47.0, "delta": -4.3}, {"kw": "Sphere Las Vegas", "last4": 39.2, "prev4": 42.0, "delta": -6.5}, {"kw": "Wizard of Oz Sphere", "last4": 9.8, "prev4": 10.5, "delta": -7.1}, {"kw": "Sphere tickets", "last4": 9.5, "prev4": 11.0, "delta": -13.6}, {"kw": "Sphere show", "last4": 3.8, "prev4": 4.5, "delta": -14.9}, {"kw": "Wizard of Oz movie", "last4": 3.4, "prev4": 4.1, "delta": -16.6}, {"kw": "Sphere Las Vegas tickets", "last4": 3.2, "prev4": 3.5, "delta": -7.1}, {"kw": "Wizard of Oz tickets", "last4": 1.7, "prev4": 1.9, "delta": -11.7}], "poll_ts": "2026-06-12T15:56:07+00:00"}, "tm_seat": {"labels": ["Jun 12 Fri 11am", "Jun 12 Fri 2pm", "Jun 13 Sat 11am", "Jun 13 Sat 2pm", "Jun 14 Sun 11am", "Jun 14 Sun 2pm", "Jun 14 Sun 5pm", "Jun 14 Sun 8pm", "Jun 15 Mon 2pm", "Jun 15 Mon 5pm", "Jun 15 Mon 8pm", "Jun 16 Tue 2pm", "Jun 16 Tue 5pm", "Jun 16 Tue 8pm", "Jun 17 Wed 5pm", "Jun 17 Wed 8pm", "Jun 18 Thu 5pm", "Jun 18 Thu 8pm", "Jun 19 Fri 11am", "Jun 19 Fri 2pm", "Jun 20 Sat 11am", "Jun 20 Sat 2pm", "Jun 21 Sun 11am", "Jun 21 Sun 2pm", "Jun 21 Sun 5pm", "Jun 21 Sun 8pm", "Jun 22 Mon 2pm", "Jun 22 Mon 5pm", "Jun 22 Mon 8pm", "Jun 23 Tue 2pm", "Jun 23 Tue 5pm", "Jun 23 Tue 8pm", "Jun 24 Wed 11am", "Jun 24 Wed 2pm", "Jun 25 Thu 2pm", "Jun 25 Thu 5pm", "Jun 25 Thu 8pm", "Jun 26 Fri 11am", "Jun 26 Fri 2pm"], "best_avail": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 119.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0], "face_max": [349.0, 349.0, 349.0, 342.0, 342.0, 342.0, 342.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 299.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 347.0, 349.0, 349.0], "face_min": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0], "sellout": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "extra": {"tod_labels": ["11:00", "14:00", "17:00", "20:00"], "tod_avgs": [104.0, 105.54, 104.0, 104.0], "tod_counts": [8, 13, 9, 9], "wd_labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "wd_avgs": [104.0, 104.0, 104.0, 105.0, 106.5, 104.0, 104.0], "wd_counts": [6, 6, 4, 5, 6, 4, 8], "hist_labels": ["$100-109", "$110-119", "$120-129"], "hist_data": [1431, 54, 9]}}};
+const D = {"schedule": {"total": 504, "first": "2026-06-11", "last": "2026-12-31", "tm_ids": 454, "months": [{"label": "2026-06", "count": 54}, {"label": "2026-07", "count": 83}, {"label": "2026-08", "count": 81}, {"label": "2026-09", "count": 76}, {"label": "2026-10", "count": 72}, {"label": "2026-11", "count": 67}, {"label": "2026-12", "count": 71}], "weekdays": [{"label": "Mon", "count": 76}, {"label": "Tue", "count": 64}, {"label": "Wed", "count": 69}, {"label": "Thu", "count": 66}, {"label": "Fri", "count": 68}, {"label": "Sat", "count": 62}, {"label": "Sun", "count": 99}], "times": [{"label": "11:00", "count": 98}, {"label": "13:45", "count": 5}, {"label": "14:00", "count": 142}, {"label": "17:00", "count": 134}, {"label": "20:00", "count": 125}], "poll_ts": "2026-06-11T16:09:59+00:00"}, "trends": {"series": {"Sphere Las Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [43.0, 43.0, 35.0, 35.0, 39.0, 57.0, 51.0, 74.0, 52.0, 50.0, 48.0, 77.0, 86.0, 53.0, 59.0, 52.0, 51.0, 56.0, 55.0, 49.0, 51.0, 53.0, 53.0, 45.0, 52.0, 44.0, 46.0, 43.0, 54.0, 64.0, 49.0, 48.0, 46.0, 45.0, 43.0, 43.0, 48.0, 77.0, 79.0, 56.0, 46.0, 45.0, 42.0, 40.0, 42.0, 40.0, 37.0, 44.0, 47.0, 40.0, 42.0, 38.0, 37.0]}, "Sphere Vegas": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [49.0, 43.0, 41.0, 40.0, 45.0, 79.0, 63.0, 88.0, 61.0, 56.0, 59.0, 87.0, 100.0, 64.0, 64.0, 63.0, 53.0, 59.0, 67.0, 57.0, 61.0, 57.0, 64.0, 54.0, 56.0, 49.0, 51.0, 44.0, 64.0, 78.0, 58.0, 54.0, 54.0, 49.0, 49.0, 50.0, 55.0, 85.0, 89.0, 62.0, 52.0, 45.0, 47.0, 50.0, 45.0, 46.0, 41.0, 52.0, 49.0, 45.0, 49.0, 43.0, 43.0]}, "Sphere Las Vegas tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [4.0, 3.0, 3.0, 3.0, 4.0, 6.0, 5.0, 8.0, 5.0, 4.0, 5.0, 7.0, 9.0, 6.0, 5.0, 6.0, 5.0, 6.0, 6.0, 5.0, 4.0, 4.0, 5.0, 5.0, 5.0, 4.0, 4.0, 4.0, 5.0, 5.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 5.0, 8.0, 8.0, 6.0, 4.0, 4.0, 3.0, 4.0, 4.0, 3.0, 3.0, 4.0, 4.0, 3.0, 4.0, 3.0, 3.0]}, "Wizard of Oz Sphere": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [13.0, 9.0, 5.0, 5.0, 5.0, 5.0, 7.0, 35.0, 14.0, 11.0, 13.0, 48.0, 76.0, 36.0, 31.0, 28.0, 25.0, 25.0, 25.0, 25.0, 21.0, 22.0, 21.0, 21.0, 23.0, 18.0, 17.0, 15.0, 20.0, 20.0, 15.0, 17.0, 16.0, 14.0, 13.0, 13.0, 15.0, 14.0, 15.0, 14.0, 13.0, 13.0, 13.0, 12.0, 12.0, 12.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 9.0]}, "Sphere tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [9.0, 7.0, 6.0, 6.0, 8.0, 17.0, 14.0, 20.0, 14.0, 15.0, 19.0, 23.0, 26.0, 15.0, 15.0, 17.0, 12.0, 14.0, 20.0, 14.0, 10.0, 12.0, 12.0, 11.0, 11.0, 12.0, 12.0, 10.0, 12.0, 13.0, 10.0, 11.0, 10.0, 10.0, 10.0, 13.0, 13.0, 35.0, 41.0, 22.0, 13.0, 11.0, 10.0, 10.0, 10.0, 10.0, 8.0, 13.0, 13.0, 9.0, 10.0, 10.0, 9.0]}, "Sphere show": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [2.6, 2.6, 2.6, 3.4, 2.6, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 5.2, 6.0, 4.3, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 3.4, 4.3, 4.3, 4.3, 5.2, 4.3, 4.3, 3.4, 6.0, 5.2, 5.2, 4.3, 4.3, 4.3, 5.2, 6.0, 5.2, 6.0, 6.9, 6.0, 5.2, 4.3, 5.2, 4.3, 4.3, 4.3, 4.3, 5.2, 4.3, 4.3, 4.3, 3.4, 3.4]}, "Wizard of Oz tickets": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [2.6, 1.7, 0.9, 0.9, 0.9, 0.9, 0.9, 6.9, 2.6, 1.7, 1.7, 10.3, 17.2, 6.9, 6.0, 4.3, 5.2, 4.3, 4.3, 4.3, 3.4, 5.2, 4.3, 4.3, 4.3, 3.4, 3.4, 2.6, 3.4, 3.4, 2.6, 3.4, 2.6, 2.6, 3.4, 2.6, 2.6, 3.4, 3.4, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 2.6, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7, 1.7]}, "Wizard of Oz movie": {"weeks": ["2025-06-08", "2025-06-15", "2025-06-22", "2025-06-29", "2025-07-06", "2025-07-13", "2025-07-20", "2025-07-27", "2025-08-03", "2025-08-10", "2025-08-17", "2025-08-24", "2025-08-31", "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28", "2025-10-05", "2025-10-12", "2025-10-19", "2025-10-26", "2025-11-02", "2025-11-09", "2025-11-16", "2025-11-23", "2025-11-30", "2025-12-07", "2025-12-14", "2025-12-21", "2025-12-28", "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22", "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07"], "rsv": [3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 3.4, 4.3, 4.3, 4.3, 3.4, 5.2, 6.9, 4.3, 5.2, 6.0, 5.2, 5.2, 5.2, 6.0, 6.9, 6.9, 6.9, 14.6, 26.7, 11.2, 8.6, 6.9, 10.3, 7.7, 6.0, 6.0, 4.3, 4.3, 4.3, 4.3, 4.3, 3.4, 3.4, 3.4, 4.3, 4.3, 3.4, 4.3, 4.3, 3.4, 4.3, 4.3, 4.3, 3.4, 3.4, 3.4, 3.4]}}, "summary": [{"kw": "Sphere Vegas", "last4": 45.0, "prev4": 47.0, "delta": -4.3}, {"kw": "Sphere Las Vegas", "last4": 39.2, "prev4": 42.0, "delta": -6.5}, {"kw": "Wizard of Oz Sphere", "last4": 9.8, "prev4": 10.5, "delta": -7.1}, {"kw": "Sphere tickets", "last4": 9.5, "prev4": 11.0, "delta": -13.6}, {"kw": "Sphere show", "last4": 3.8, "prev4": 4.5, "delta": -14.9}, {"kw": "Wizard of Oz movie", "last4": 3.4, "prev4": 4.1, "delta": -16.6}, {"kw": "Sphere Las Vegas tickets", "last4": 3.2, "prev4": 3.5, "delta": -7.1}, {"kw": "Wizard of Oz tickets", "last4": 1.7, "prev4": 1.9, "delta": -11.7}], "poll_ts": "2026-06-12T15:56:07+00:00"}, "tm_seat": {"labels": ["Jun 12 Fri 11am", "Jun 12 Fri 2pm", "Jun 13 Sat 11am", "Jun 13 Sat 2pm", "Jun 14 Sun 11am", "Jun 14 Sun 2pm", "Jun 14 Sun 5pm", "Jun 14 Sun 8pm", "Jun 15 Mon 2pm", "Jun 15 Mon 5pm", "Jun 15 Mon 8pm", "Jun 16 Tue 2pm", "Jun 16 Tue 5pm", "Jun 16 Tue 8pm", "Jun 17 Wed 5pm", "Jun 17 Wed 8pm", "Jun 18 Thu 5pm", "Jun 18 Thu 8pm", "Jun 19 Fri 11am", "Jun 19 Fri 2pm", "Jun 20 Sat 11am", "Jun 20 Sat 2pm", "Jun 21 Sun 11am", "Jun 21 Sun 2pm", "Jun 21 Sun 5pm", "Jun 21 Sun 8pm", "Jun 22 Mon 2pm", "Jun 22 Mon 5pm", "Jun 22 Mon 8pm", "Jun 23 Tue 2pm", "Jun 23 Tue 5pm", "Jun 23 Tue 8pm", "Jun 24 Wed 11am", "Jun 24 Wed 2pm", "Jun 25 Thu 2pm", "Jun 25 Thu 5pm", "Jun 25 Thu 8pm", "Jun 26 Fri 11am", "Jun 26 Fri 2pm"], "best_avail": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 119.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0], "face_max": [349.0, 349.0, 349.0, 342.0, 342.0, 342.0, 342.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 299.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 349.0, 347.0, 349.0, 349.0], "face_min": [104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 104.0, 109.0, 104.0, 104.0, 104.0, 104.0], "sellout": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], "extra": {"tod_labels": ["11:00", "14:00", "17:00", "20:00"], "tod_avgs": [104.0, 105.54, 104.0, 104.0], "tod_counts": [8, 13, 9, 9], "wd_labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "wd_avgs": [104.0, 104.0, 104.0, 105.0, 106.5, 104.0, 104.0], "wd_counts": [6, 6, 4, 5, 6, 4, 8], "hist_labels": ["$100-109", "$110-119", "$120-129"], "hist_data": [1431, 54, 9], "spread_labels": ["Jun 12 Fri 11am", "Jun 12 Fri 2pm", "Jun 13 Sat 11am", "Jun 13 Sat 2pm", "Jun 14 Sun 11am", "Jun 14 Sun 2pm", "Jun 14 Sun 5pm", "Jun 14 Sun 8pm", "Jun 15 Mon 2pm", "Jun 15 Mon 5pm", "Jun 15 Mon 8pm", "Jun 16 Tue 2pm", "Jun 16 Tue 5pm", "Jun 16 Tue 8pm", "Jun 17 Wed 5pm", "Jun 17 Wed 8pm", "Jun 18 Thu 5pm", "Jun 18 Thu 8pm", "Jun 19 Fri 11am", "Jun 19 Fri 2pm", "Jun 20 Sat 11am", "Jun 20 Sat 2pm", "Jun 21 Sun 11am", "Jun 21 Sun 2pm", "Jun 21 Sun 5pm", "Jun 21 Sun 8pm", "Jun 22 Mon 2pm", "Jun 22 Mon 5pm", "Jun 22 Mon 8pm", "Jun 23 Tue 2pm", "Jun 23 Tue 5pm", "Jun 23 Tue 8pm", "Jun 24 Wed 11am", "Jun 24 Wed 2pm", "Jun 25 Thu 2pm", "Jun 25 Thu 5pm", "Jun 25 Thu 8pm", "Jun 26 Fri 11am", "Jun 26 Fri 2pm"], "spread_values": [5.0, 10.0, 10.0, 5.0, 5.0, 5.0, 5.0, 0.0, 5.0, 5.0, 5.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 0.0, 5.0, 5.0, 0.0, 5.0, 0.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]}}};
 
 if (D.schedule && D.schedule.months) {
   new Chart(document.getElementById('monthChart'), {
@@ -344,6 +774,26 @@ if (D.tm_seat && D.tm_seat.extra) {
         afterLabel: ctx => x.wd_counts[ctx.dataIndex] + ' shows'
       } } },
       scales: { y: { beginAtZero: false, title: { display: true, text: '$' } } },
+    },
+  });
+
+  // Spread per show (high - low of the 40 quickpicks)
+  new Chart(document.getElementById('spreadChart'), {
+    type: 'bar',
+    data: {
+      labels: x.spread_labels,
+      datasets: [{
+        label: 'Spread ($)',
+        data: x.spread_values,
+        backgroundColor: x.spread_values.map(v => v > 0 ? '#dc2626' : '#e5e5e5'),
+      }],
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Spread ($)' } },
+        x: { ticks: { maxRotation: 45, minRotation: 30, font: { size: 9 } } },
+      },
     },
   });
 

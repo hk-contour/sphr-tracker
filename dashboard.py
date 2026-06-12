@@ -119,8 +119,15 @@ if tm_seat:
         if window_start <= r['event_date'] <= window_end:
             by_event[(r['event_date'], r['event_time'])].append(r)
 
+    def median(xs):
+        s = sorted(xs)
+        n = len(s)
+        if n == 0: return None
+        return s[n//2] if n % 2 else (s[n//2-1] + s[n//2]) / 2
+
     rows_per_event = []
     section_offers = defaultdict(int)
+    section_prices = defaultdict(list)
     all_quickpick_prices = []
     for key, rows in by_event.items():
         latest_ts = max(r['poll_ts_utc'] for r in rows)
@@ -131,6 +138,7 @@ if tm_seat:
         for r in priced_latest:
             if r['section']:
                 section_offers[r['section']] += 1
+                section_prices[r['section']].append(float(r['price']))
             all_quickpick_prices.append(float(r['price']))
         d = datetime.strptime(key[0], '%Y-%m-%d')
         rows_per_event.append({
@@ -141,6 +149,12 @@ if tm_seat:
             'face_min': float(latest[0]['face_price_min']) if latest[0]['face_price_min'] not in ('', None) else None,
             'face_max': float(latest[0]['face_price_max']) if latest[0]['face_price_max'] not in ('', None) else None,
             'best_avail': min(prices) if prices else None,
+            'qp_avg':    sum(prices) / len(prices) if prices else None,
+            'qp_median': median(prices) if prices else None,
+            'qp_max':    max(prices) if prices else None,
+            'qp_spread': (max(prices) - min(prices)) if prices else None,
+            'qp_distinct': len(set(prices)) if prices else 0,
+            'qp_sections': len({r['section'] for r in priced_latest if r['section']}),
             'qp_count': len(priced_latest),
             'is_sellout': is_sellout,
         })
@@ -152,6 +166,13 @@ if tm_seat:
     avg_best = sum(r['best_avail'] for r in rows_per_event if r['best_avail']) / max(1, len([r for r in rows_per_event if r['best_avail']]))
     min_best = min((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
     max_best = max((r['best_avail'] for r in rows_per_event if r['best_avail']), default=0)
+
+    # Aggregate quickpick stats across all shows
+    avg_qp_avg = (sum(r['qp_avg'] for r in rows_per_event if r['qp_avg']) /
+                  max(1, len([r for r in rows_per_event if r['qp_avg']])))
+    overall_qp_min = min(all_quickpick_prices) if all_quickpick_prices else 0
+    overall_qp_max = max(all_quickpick_prices) if all_quickpick_prices else 0
+    shows_with_spread = sum(1 for r in rows_per_event if r['qp_spread'] and r['qp_spread'] > 0)
 
     # Sellout markers placed at the average price so they show up alongside the other data
     sellout_y = avg_best if avg_best else 100
@@ -217,6 +238,8 @@ if tm_seat:
         'wd_counts':  [d[2] for d in wd_data],
         'hist_labels': [f'${b}-{b+9}' for b in hist_labels],
         'hist_data':  hist_data,
+        'spread_labels': [r['datetime_label'] for r in rows_per_event],
+        'spread_values': [round(r['qp_spread'], 0) if r['qp_spread'] is not None else 0 for r in rows_per_event],
     }
 
     panel_seatmap = f"""
@@ -273,6 +296,64 @@ if tm_seat:
   <h3>Section coverage (which sections appear most often in best-available)</h3>
   <div class="meta">Shows the sections feeding the "best available" pool — sections at the top of this list have the most unsold low-tier inventory across upcoming shows. (Premium sections rarely appear because they're not the cheapest tier.)</div>
   {section_table}
+
+  <h3>Quickpick stats across all shows ({len(all_quickpick_prices):,} scraped offers)</h3>
+  <div class="meta">These aggregate over <em>every</em> quickpick we've scraped (40-ish per show × 39 shows), not just the lowest price per show.</div>
+  <div class="stat-row" style="margin-top:8px;">
+    <div class="stat">
+      <div class="stat-label">Avg quickpick price (across all)</div>
+      <div class="stat-value">${avg_qp_avg:.0f}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Quickpick min / max</div>
+      <div class="stat-value">${overall_qp_min:.0f} / ${overall_qp_max:.0f}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Shows with price spread &gt; $0</div>
+      <div class="stat-value">{shows_with_spread} / {len(rows_per_event)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg face max (premium ceiling)</div>
+      <div class="stat-value">${sum(r['face_max'] for r in rows_per_event if r['face_max'])/max(1,len([r for r in rows_per_event if r['face_max']])):.0f}+</div>
+    </div>
+  </div>
+
+  <h3>Price spread per show (high − low of the 40 quickpicks)</h3>
+  <div class="meta">Most shows show $0 spread (all 40 quickpicks at the same lowest tier). When this rises above $0, the lowest tier is starting to deplete and quickpicks include some higher-priced offers.</div>
+  <div class="chart-container-small"><canvas id="spreadChart"></canvas></div>
+
+  <h3>Per-show quickpick stats</h3>
+  <div class="meta">Detail table — useful for finding the outliers. Sorted by date.</div>
+  <table>
+    <tr>
+      <th>Date</th><th>Time</th>
+      <th style="text-align:right;">Best</th>
+      <th style="text-align:right;">Avg of 40</th>
+      <th style="text-align:right;">Median</th>
+      <th style="text-align:right;">Max of 40</th>
+      <th style="text-align:right;">Spread</th>
+      <th style="text-align:right;">Distinct prices</th>
+      <th style="text-align:right;">Sections</th>
+      <th style="text-align:right;">Face max</th>
+    </tr>"""
+
+    for r in rows_per_event:
+        if not r['best_avail']:
+            panel_seatmap += f'<tr style="color:#999;"><td>{r["date"]}</td><td>{r["time"]}</td><td colspan="8" style="text-align:center;font-style:italic;">no quickpicks (sellout?)</td></tr>'
+            continue
+        spread_cls = 'delta-pos' if r['qp_spread'] > 0 else ''
+        panel_seatmap += f"""<tr>
+            <td>{r['date']}</td><td>{r['time']}</td>
+            <td style="text-align:right;">${r['best_avail']:.0f}</td>
+            <td style="text-align:right;">${r['qp_avg']:.0f}</td>
+            <td style="text-align:right;">${r['qp_median']:.0f}</td>
+            <td style="text-align:right;">${r['qp_max']:.0f}</td>
+            <td style="text-align:right;" class="{spread_cls}">${r['qp_spread']:.0f}</td>
+            <td style="text-align:right;">{r['qp_distinct']}</td>
+            <td style="text-align:right;">{r['qp_sections']}</td>
+            <td style="text-align:right;">${r['face_max']:.0f}+</td>
+          </tr>"""
+    panel_seatmap += f"""</table>
 
   {sellouts_html}
 </div>"""
@@ -564,6 +645,26 @@ if (D.tm_seat && D.tm_seat.extra) {{
         afterLabel: ctx => x.wd_counts[ctx.dataIndex] + ' shows'
       }} }} }},
       scales: {{ y: {{ beginAtZero: false, title: {{ display: true, text: '$' }} }} }},
+    }},
+  }});
+
+  // Spread per show (high - low of the 40 quickpicks)
+  new Chart(document.getElementById('spreadChart'), {{
+    type: 'bar',
+    data: {{
+      labels: x.spread_labels,
+      datasets: [{{
+        label: 'Spread ($)',
+        data: x.spread_values,
+        backgroundColor: x.spread_values.map(v => v > 0 ? '#dc2626' : '#e5e5e5'),
+      }}],
+    }},
+    options: {{
+      plugins: {{ legend: {{ display: false }} }},
+      scales: {{
+        y: {{ beginAtZero: true, title: {{ display: true, text: 'Spread ($)' }} }},
+        x: {{ ticks: {{ maxRotation: 45, minRotation: 30, font: {{ size: 9 }} }} }},
+      }},
     }},
   }});
 
