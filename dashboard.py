@@ -104,23 +104,40 @@ if tm_seat:
     window_start = today_d.isoformat()
     window_end = (today_d + _td(days=14)).isoformat()
 
+    def fmt_label(date_str, time_str):
+        """Pretty x-axis label: 'Jun 12 Fri 2pm' instead of '2026-06-12 14:00'."""
+        d = datetime.strptime(date_str, '%Y-%m-%d')
+        wd = d.strftime('%a')
+        ds = d.strftime('%b %d')
+        hh = int(time_str[:2])
+        ampm = 'am' if hh < 12 else 'pm'
+        hh12 = hh - 12 if hh > 12 else (12 if hh == 0 else hh)
+        return f'{ds} {wd} {hh12}{ampm}'
+
     by_event = defaultdict(list)
     for r in tm_seat:
         if window_start <= r['event_date'] <= window_end:
             by_event[(r['event_date'], r['event_time'])].append(r)
 
     rows_per_event = []
+    section_offers = defaultdict(int)
+    all_quickpick_prices = []
     for key, rows in by_event.items():
         latest_ts = max(r['poll_ts_utc'] for r in rows)
         latest = [r for r in rows if r['poll_ts_utc'] == latest_ts]
-        # Real quickpick rows have a price; sellout markers have price=''
         priced_latest = [r for r in latest if r['price'] not in ('', None)]
         prices = [float(r['price']) for r in priced_latest]
         is_sellout = (len(priced_latest) == 0)
+        for r in priced_latest:
+            if r['section']:
+                section_offers[r['section']] += 1
+            all_quickpick_prices.append(float(r['price']))
+        d = datetime.strptime(key[0], '%Y-%m-%d')
         rows_per_event.append({
             'date': key[0],
             'time': key[1][:5],
-            'datetime_label': f"{key[0]} {key[1][:5]}",
+            'datetime_label': fmt_label(key[0], key[1]),
+            'weekday': d.strftime('%a'),
             'face_min': float(latest[0]['face_price_min']) if latest[0]['face_price_min'] not in ('', None) else None,
             'face_max': float(latest[0]['face_price_max']) if latest[0]['face_price_max'] not in ('', None) else None,
             'best_avail': min(prices) if prices else None,
@@ -144,7 +161,6 @@ if tm_seat:
         'best_avail': [r['best_avail'] for r in rows_per_event],
         'face_max': [r['face_max'] for r in rows_per_event],
         'face_min': [r['face_min'] for r in rows_per_event],
-        # Sellout point per event — null if not a sellout, value if it is
         'sellout': [sellout_y if r['is_sellout'] else None for r in rows_per_event],
     }
 
@@ -161,18 +177,60 @@ if tm_seat:
             sellouts_html += f'<tr><td>{s["date"]}</td><td>{s["time"]}</td><td>{fmin} – {fmax}</td></tr>'
         sellouts_html += '</table>'
 
+    # === Per-time-of-day average best-available ===
+    by_tod = defaultdict(list)
+    for r in rows_per_event:
+        if r['best_avail']:
+            by_tod[r['time']].append(r['best_avail'])
+    tod_data = sorted([(t, sum(v)/len(v), len(v)) for t, v in by_tod.items()])
+
+    # === Per-weekday average best-available ===
+    by_wd = defaultdict(list)
+    for r in rows_per_event:
+        if r['best_avail']:
+            by_wd[r['weekday']].append(r['best_avail'])
+    wd_order = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    wd_data = [(d, sum(by_wd[d])/len(by_wd[d]) if by_wd[d] else None, len(by_wd[d])) for d in wd_order]
+
+    # === Price histogram across all quickpicks ===
+    price_buckets = defaultdict(int)
+    for p in all_quickpick_prices:
+        bucket = int(p // 10) * 10  # $10 buckets
+        price_buckets[bucket] += 1
+    hist_labels = sorted(price_buckets.keys())
+    hist_data = [price_buckets[b] for b in hist_labels]
+
+    # === Section coverage ===
+    section_table = ''
+    if section_offers:
+        section_table = '<table><tr><th>Section</th><th style="text-align:right;">Shows w/ best-available inventory here</th></tr>'
+        for sec, count in sorted(section_offers.items(), key=lambda x: -x[1])[:15]:
+            section_table += f'<tr><td>Sec {sec}</td><td style="text-align:right;">{count}</td></tr>'
+        section_table += '</table>'
+
+    tm_seat_chart['extra'] = {
+        'tod_labels': [t[0] for t in tod_data],
+        'tod_avgs':   [round(t[1], 2) for t in tod_data],
+        'tod_counts': [t[2] for t in tod_data],
+        'wd_labels':  wd_order,
+        'wd_avgs':    [round(d[1], 2) if d[1] else None for d in wd_data],
+        'wd_counts':  [d[2] for d in wd_data],
+        'hist_labels': [f'${b}-{b+9}' for b in hist_labels],
+        'hist_data':  hist_data,
+    }
+
     panel_seatmap = f"""
 <div class="panel" style="border-left: 4px solid #2563eb;">
   <div class="panel-title">Wizard of Oz · ticket prices — next 14 days</div>
-  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show. Window: {window_start} → {window_end}.</div>
+  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show (TM's lowest-priced offers). Window: {window_start} → {window_end}.</div>
   <div class="stat-row">
     <div class="stat">
       <div class="stat-label">Shows scraped in window</div>
       <div class="stat-value">{len(rows_per_event)}</div>
     </div>
     <div class="stat">
-      <div class="stat-label">Likely sellouts</div>
-      <div class="stat-value" style="color:{'#dc2626' if sellouts else '#1a1a1a'};">{len(sellouts)}</div>
+      <div class="stat-label">Likely sellouts <span title="A show that returned 0 quickpicks after a retry-with-longer-wait. Zero today means no shows currently appear sold-out at the lowest tier." style="color:#888;cursor:help;">ⓘ</span></div>
+      <div class="stat-value" style="color:{'#dc2626' if sellouts else '#059669'};">{len(sellouts)}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Best-available range</div>
@@ -183,14 +241,39 @@ if tm_seat:
       <div class="stat-value">${avg_best:.0f}</div>
     </div>
   </div>
+  <div class="meta" style="background:#fff8e1;padding:10px 12px;border-radius:4px;margin:12px 0;">
+    <strong>"Best-available" is the lowest-priced seat in the entire arena</strong> — so it stays at $104 as long as <em>any</em> upper-tier seat is for sale. Dynamic pricing happens on premium tiers (see <strong>Face max</strong>, $342–$349). When best-available jumps above $104, the cheapest tier has sold out for that show.
+  </div>
   <h3>Price by show — 14-day window</h3>
   <div class="chart-container"><canvas id="seatPriceChart"></canvas></div>
   <div class="meta" style="margin-top:8px;">
     Each marker = one showtime. <span style="color:#2563eb;">●</span> best available ·
-    <span style="color:#dc2626;">●</span> face max ·
-    <span style="color:#888;">●</span> face min (dashed) ·
+    <span style="color:#dc2626;">●</span> face max (premium tier ceiling) ·
+    <span style="color:#888;">●</span> face min (dashed; lowest tier listed) ·
     <span style="color:#dc2626;">✕</span> likely sellout (0 quickpicks).
   </div>
+
+  <div class="grid-2" style="margin-top:24px;">
+    <div>
+      <h3>Avg best-available by time of day</h3>
+      <div class="meta">Compares matinee vs evening pricing across the window.</div>
+      <div class="chart-container-small"><canvas id="todChart"></canvas></div>
+    </div>
+    <div>
+      <h3>Avg best-available by weekday</h3>
+      <div class="meta">Weekend vs weekday pricing.</div>
+      <div class="chart-container-small"><canvas id="wdChart"></canvas></div>
+    </div>
+  </div>
+
+  <h3>Quickpick price distribution (all offers across all shows)</h3>
+  <div class="meta">Distribution of all {len(all_quickpick_prices)} quickpick prices in the 14-day window, $10 buckets. Reveals the underlying tier structure of "best available" offers.</div>
+  <div class="chart-container-small"><canvas id="priceHistChart"></canvas></div>
+
+  <h3>Section coverage (which sections appear most often in best-available)</h3>
+  <div class="meta">Shows the sections feeding the "best available" pool — sections at the top of this list have the most unsold low-tier inventory across upcoming shows. (Premium sections rarely appear because they're not the cheapest tier.)</div>
+  {section_table}
+
   {sellouts_html}
 </div>"""
 
@@ -329,7 +412,17 @@ if trends_data:
 else:
     html += '<div class="pending">No trends data — run pulls/pytrends_pull.py</div>'
 
-html += '</div>\n\n<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div><div class="meta">Slow-moving supply signal from Ticketmaster\'s free public API. Tracks how many shows are <code>onsale</code> vs <code>offsale</code>/<code>cancelled</code> per month. Becomes useful when shows start flipping <code>onsale → offsale</code> (sales window closing or sold out). Today all 497 upcoming shows are <code>onsale</code>.</div>'
+html += '</div>\n\n<div class="panel"><div class="panel-title">Ticketmaster Discovery (status + sales windows)</div>'
+html += """<div class="meta">Slow-moving supply signal from Ticketmaster's free public API. Becomes useful when shows start flipping status (e.g. <code>onsale → offsale</code>).</div>
+<div class="meta" style="background:#f0f9ff;padding:10px 12px;border-radius:4px;margin:12px 0;">
+  <strong>Column legend:</strong>
+  <ul style="margin:6px 0 0 18px;padding:0;font-size:12px;">
+    <li><code>onsale</code> — tickets actively for sale via Ticketmaster right now</li>
+    <li><code>offsale</code> — sales window closed (either sold out, or sales period ended). Becoming the key signal once we accumulate polling history.</li>
+    <li><code>cancelled</code> — show pulled / cancelled</li>
+    <li><code>other</code> — any non-standard status code (rescheduled, postponed, etc.)</li>
+  </ul>
+</div>"""
 if tm_disc:
     # Latest poll snapshot
     latest_ts = max(r['poll_ts_utc'] for r in tm_disc)
@@ -427,6 +520,71 @@ if (D.schedule && D.schedule.months) {{
     }},
     options: {{ plugins: {{ legend: {{ display: false }} }},
                 scales: {{ y: {{ beginAtZero: true }} }} }},
+  }});
+}}
+
+if (D.tm_seat && D.tm_seat.extra) {{
+  const x = D.tm_seat.extra;
+
+  // Time-of-day bar chart
+  new Chart(document.getElementById('todChart'), {{
+    type: 'bar',
+    data: {{
+      labels: x.tod_labels.map(t => {{
+        const h = parseInt(t.slice(0,2));
+        return (h<12?h:(h-12||12)) + (h<12?'am':'pm');
+      }}),
+      datasets: [{{
+        label: 'Avg best-available ($)',
+        data: x.tod_avgs,
+        backgroundColor: '#2563eb',
+      }}],
+    }},
+    options: {{
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        afterLabel: ctx => x.tod_counts[ctx.dataIndex] + ' shows'
+      }} }} }},
+      scales: {{ y: {{ beginAtZero: false, title: {{ display: true, text: '$' }} }} }},
+    }},
+  }});
+
+  // Weekday bar chart
+  new Chart(document.getElementById('wdChart'), {{
+    type: 'bar',
+    data: {{
+      labels: x.wd_labels,
+      datasets: [{{
+        label: 'Avg best-available ($)',
+        data: x.wd_avgs,
+        backgroundColor: '#059669',
+      }}],
+    }},
+    options: {{
+      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
+        afterLabel: ctx => x.wd_counts[ctx.dataIndex] + ' shows'
+      }} }} }},
+      scales: {{ y: {{ beginAtZero: false, title: {{ display: true, text: '$' }} }} }},
+    }},
+  }});
+
+  // Price histogram
+  new Chart(document.getElementById('priceHistChart'), {{
+    type: 'bar',
+    data: {{
+      labels: x.hist_labels,
+      datasets: [{{
+        label: '# quickpick offers in bucket',
+        data: x.hist_data,
+        backgroundColor: '#7c3aed',
+      }}],
+    }},
+    options: {{
+      plugins: {{ legend: {{ display: false }} }},
+      scales: {{
+        y: {{ beginAtZero: true, title: {{ display: true, text: '# offers' }} }},
+        x: {{ title: {{ display: true, text: 'Price bucket' }} }},
+      }},
+    }},
   }});
 }}
 

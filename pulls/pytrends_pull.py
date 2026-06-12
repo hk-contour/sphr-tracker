@@ -29,7 +29,6 @@ BATCH_A = [
 ]
 BATCH_B = [
     'Sphere Las Vegas',           # same anchor
-    'MSG Sphere',
     'Sphere show',
     'Wizard of Oz tickets',
     'Wizard of Oz movie',
