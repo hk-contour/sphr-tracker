@@ -242,9 +242,6 @@ html = f"""<!DOCTYPE html>
 
 {panel_seatmap}
 
-<details style="margin-top: 24px;">
-  <summary style="cursor: pointer; font-size: 13px; color: #555; padding: 8px 0; user-select: none;">Context: schedule, search interest, TM Discovery status (click to expand)</summary>
-
 <div class="panel">
   <div class="panel-title">Schedule overview (SeatGeek)</div>
 """
@@ -360,7 +357,7 @@ else:
       Not yet built. ScrapingBee is now in place (same path that unlocks TM) — TripAdvisor scrape
       can be wired in next using <code>stealth_proxy=true</code> against the Sphere attraction page.
     </div>"""
-html += '</div></details>'
+html += '</div>'
 
 # ---------- JS for charts ----------
 chart_data = {
