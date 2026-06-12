@@ -43,14 +43,22 @@
 
 <h1>Sphere demand monitor — Wizard of Oz</h1>
 <h2>Daily refresh tracking SPHR's residency demand</h2>
-<div class="meta">Generated 2026-06-12 12:26 </div>
+<div class="meta">Generated 2026-06-12 12:32 </div>
 
 <div class="headline">📊 39 shows scraped in next 14d · best-available $104–$119 (avg $105) · 0 likely sellouts · 504 upcoming showtimes (2026-06-11 → 2026-12-31) · "Sphere Las Vegas" search interest -6% MoM</div>
 
 
 <div class="panel" style="border-left: 4px solid #2563eb;">
   <div class="panel-title">Wizard of Oz · ticket prices — next 14 days</div>
-  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show (TM's lowest-priced offers). Window: 2026-06-12 → 2026-06-26.</div>
+  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Window: 2026-06-12 → 2026-06-26.</div>
+  <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin:10px 0 14px;font-size:12px;color:#1e3a8a;line-height:1.55;">
+    <strong>Glossary</strong><br>
+    <strong>QuickPick</strong> — TM's "best available" feature returns up to <strong>40 cheapest currently-for-sale tickets</strong> per show (each row: section + row + price). Always biased to the lowest tier — premium sections rarely appear unless cheaper ones sell out.<br>
+    <strong>Best-available</strong> — the lowest price among the 40 quickpicks for a show. Stays flat at $104 as long as <em>any</em> cheapest-tier seat is for sale.<br>
+    <strong>Face max</strong> — top of the price slider (the price ceiling for premium seats). Varies $342–$349 across shows due to dynamic pricing.<br>
+    <strong>Likely sellout</strong> — a show that returned 0 quickpicks even after retry-with-longer-wait. Inferred sellout, not confirmed by TM.<br>
+    <strong>Spread</strong> — high − low across the 40 quickpicks. Stays at $0 while cheapest tier has plenty of inventory; rises when it starts depleting.
+  </div>
   <div class="stat-row">
     <div class="stat">
       <div class="stat-label">Shows scraped in window</div>
@@ -116,8 +124,10 @@
   <div class="chart-container-small"><canvas id="spreadChart"></canvas></div>
 
   <h3>Per-show quickpick stats</h3>
-  <div class="meta">Detail table — useful for finding the outliers. Sorted by date.</div>
-  <table>
+  <div class="meta">Detail table — useful for finding outliers. Sorted by date. Scroll to see all 39 shows.</div>
+  <div style="max-height:320px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:4px;">
+  <table style="margin:0;">
+    <thead style="position:sticky;top:0;background:#f5f5f5;z-index:1;">
     <tr>
       <th>Date</th><th>Time</th>
       <th style="text-align:right;">Best</th>
@@ -128,7 +138,8 @@
       <th style="text-align:right;">Distinct prices</th>
       <th style="text-align:right;">Sections</th>
       <th style="text-align:right;">Face max</th>
-    </tr><tr>
+    </tr>
+    </thead><tbody><tr>
             <td>2026-06-12</td><td>11:00</td>
             <td style="text-align:right;">$104</td>
             <td style="text-align:right;">$106</td>
@@ -518,7 +529,8 @@
             <td style="text-align:right;">2</td>
             <td style="text-align:right;">2</td>
             <td style="text-align:right;">$349+</td>
-          </tr></table>
+          </tr></tbody></table>
+  </div>
 
   
 </div>

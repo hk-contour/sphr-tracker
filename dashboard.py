@@ -242,7 +242,15 @@ if tm_seat:
     panel_seatmap = f"""
 <div class="panel" style="border-left: 4px solid #2563eb;">
   <div class="panel-title">Wizard of Oz · ticket prices — next 14 days</div>
-  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Each render returns up to 40 "best available" quickpicks per show (TM's lowest-priced offers). Window: {window_start} → {window_end}.</div>
+  <div class="meta">Scraped from public Ticketmaster event pages via ScrapingBee. Window: {window_start} → {window_end}.</div>
+  <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 14px;margin:10px 0 14px;font-size:12px;color:#1e3a8a;line-height:1.55;">
+    <strong>Glossary</strong><br>
+    <strong>QuickPick</strong> — TM's "best available" feature returns up to <strong>40 cheapest currently-for-sale tickets</strong> per show (each row: section + row + price). Always biased to the lowest tier — premium sections rarely appear unless cheaper ones sell out.<br>
+    <strong>Best-available</strong> — the lowest price among the 40 quickpicks for a show. Stays flat at $104 as long as <em>any</em> cheapest-tier seat is for sale.<br>
+    <strong>Face max</strong> — top of the price slider (the price ceiling for premium seats). Varies $342–$349 across shows due to dynamic pricing.<br>
+    <strong>Likely sellout</strong> — a show that returned 0 quickpicks even after retry-with-longer-wait. Inferred sellout, not confirmed by TM.<br>
+    <strong>Spread</strong> — high − low across the 40 quickpicks. Stays at $0 while cheapest tier has plenty of inventory; rises when it starts depleting.
+  </div>
   <div class="stat-row">
     <div class="stat">
       <div class="stat-label">Shows scraped in window</div>
@@ -308,8 +316,10 @@ if tm_seat:
   <div class="chart-container-small"><canvas id="spreadChart"></canvas></div>
 
   <h3>Per-show quickpick stats</h3>
-  <div class="meta">Detail table — useful for finding the outliers. Sorted by date.</div>
-  <table>
+  <div class="meta">Detail table — useful for finding outliers. Sorted by date. Scroll to see all {len(rows_per_event)} shows.</div>
+  <div style="max-height:320px;overflow-y:auto;border:1px solid #e5e5e5;border-radius:4px;">
+  <table style="margin:0;">
+    <thead style="position:sticky;top:0;background:#f5f5f5;z-index:1;">
     <tr>
       <th>Date</th><th>Time</th>
       <th style="text-align:right;">Best</th>
@@ -320,7 +330,8 @@ if tm_seat:
       <th style="text-align:right;">Distinct prices</th>
       <th style="text-align:right;">Sections</th>
       <th style="text-align:right;">Face max</th>
-    </tr>"""
+    </tr>
+    </thead><tbody>"""
 
     for r in rows_per_event:
         if not r['best_avail']:
@@ -338,7 +349,8 @@ if tm_seat:
             <td style="text-align:right;">{r['qp_sections']}</td>
             <td style="text-align:right;">${r['face_max']:.0f}+</td>
           </tr>"""
-    panel_seatmap += f"""</table>
+    panel_seatmap += f"""</tbody></table>
+  </div>
 
   {sellouts_html}
 </div>"""
