@@ -198,20 +198,16 @@ if tm_seat:
             sellouts_html += f'<tr><td>{s["date"]}</td><td>{s["time"]}</td><td>{fmin} – {fmax}</td></tr>'
         sellouts_html += '</table>'
 
-    # === Per-time-of-day average best-available ===
-    by_tod = defaultdict(list)
-    for r in rows_per_event:
-        if r['best_avail']:
-            by_tod[r['time']].append(r['best_avail'])
-    tod_data = sorted([(t, sum(v)/len(v), len(v)) for t, v in by_tod.items()])
-
-    # === Per-weekday average best-available ===
-    by_wd = defaultdict(list)
-    for r in rows_per_event:
-        if r['best_avail']:
-            by_wd[r['weekday']].append(r['best_avail'])
-    wd_order = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    wd_data = [(d, sum(by_wd[d])/len(by_wd[d]) if by_wd[d] else None, len(by_wd[d])) for d in wd_order]
+    # === Sphere venue capacity, parsed from TM seatManifest (constant across WoZ residency) ===
+    SPHERE_SECTIONS = [
+        ('202', 348), ('203', 195), ('204', 267), ('205', 295), ('206', 154),
+        ('207', 295), ('208', 267), ('209', 195), ('210', 348),
+        ('302', 325), ('303', 483), ('304', 398), ('305', 372), ('306', 303),
+        ('307', 372), ('308', 398), ('309', 483), ('310', 325),
+        ('403', 244), ('404', 446), ('405', 709), ('406', 578), ('407', 709),
+        ('408', 446), ('409', 244),
+    ]
+    SPHERE_TOTAL_CAPACITY = sum(s[1] for s in SPHERE_SECTIONS)  # 9,199
 
     # === Price histogram across all quickpicks ===
     price_buckets = defaultdict(int)
@@ -229,17 +225,18 @@ if tm_seat:
             section_table += f'<tr><td>Sec {sec}</td><td style="text-align:right;">{count}</td></tr>'
         section_table += '</table>'
 
+    # Sections that appear in our best-available pool (= sections still selling cheap tier)
+    sections_with_inventory = set(section_offers.keys())
+
     tm_seat_chart['extra'] = {
-        'tod_labels': [t[0] for t in tod_data],
-        'tod_avgs':   [round(t[1], 2) for t in tod_data],
-        'tod_counts': [t[2] for t in tod_data],
-        'wd_labels':  wd_order,
-        'wd_avgs':    [round(d[1], 2) if d[1] else None for d in wd_data],
-        'wd_counts':  [d[2] for d in wd_data],
         'hist_labels': [f'${b}-{b+9}' for b in hist_labels],
         'hist_data':  hist_data,
         'spread_labels': [r['datetime_label'] for r in rows_per_event],
         'spread_values': [round(r['qp_spread'], 0) if r['qp_spread'] is not None else 0 for r in rows_per_event],
+        'capacity_sections': [s[0] for s in SPHERE_SECTIONS],
+        'capacity_values':   [s[1] for s in SPHERE_SECTIONS],
+        'capacity_in_pool':  [s[0] in sections_with_inventory for s in SPHERE_SECTIONS],
+        'capacity_total':    SPHERE_TOTAL_CAPACITY,
     }
 
     panel_seatmap = f"""
@@ -264,7 +261,25 @@ if tm_seat:
       <div class="stat-value">${avg_best:.0f}</div>
     </div>
   </div>
-  <div class="meta" style="background:#fff8e1;padding:10px 12px;border-radius:4px;margin:12px 0;">
+  <div class="stat-row" style="margin-top:4px;">
+    <div class="stat">
+      <div class="stat-label">Avg quickpick price (all {len(all_quickpick_prices):,})</div>
+      <div class="stat-value">${avg_qp_avg:.0f}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Quickpick min / max</div>
+      <div class="stat-value">${overall_qp_min:.0f} / ${overall_qp_max:.0f}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Shows w/ price spread &gt; $0</div>
+      <div class="stat-value">{shows_with_spread} / {len(rows_per_event)}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg face max (premium ceiling)</div>
+      <div class="stat-value">${sum(r['face_max'] for r in rows_per_event if r['face_max'])/max(1,len([r for r in rows_per_event if r['face_max']])):.0f}+</div>
+    </div>
+  </div>
+  <div class="meta" style="background:#fff8e1;padding:10px 12px;border-radius:4px;margin:16px 0;">
     <strong>"Best-available" is the lowest-priced seat in the entire arena</strong> — so it stays at $104 as long as <em>any</em> upper-tier seat is for sale. Dynamic pricing happens on premium tiers (see <strong>Face max</strong>, $342–$349). When best-available jumps above $104, the cheapest tier has sold out for that show.
   </div>
   <h3>Price by show — 14-day window</h3>
@@ -276,18 +291,9 @@ if tm_seat:
     <span style="color:#dc2626;">✕</span> likely sellout (0 quickpicks).
   </div>
 
-  <div class="grid-2" style="margin-top:24px;">
-    <div>
-      <h3>Avg best-available by time of day</h3>
-      <div class="meta">Compares matinee vs evening pricing across the window.</div>
-      <div class="chart-container-small"><canvas id="todChart"></canvas></div>
-    </div>
-    <div>
-      <h3>Avg best-available by weekday</h3>
-      <div class="meta">Weekend vs weekday pricing.</div>
-      <div class="chart-container-small"><canvas id="wdChart"></canvas></div>
-    </div>
-  </div>
+  <h3>Venue capacity — Sphere for Wizard of Oz</h3>
+  <div class="meta">Sphere is configured with <strong>9,199 seats across 25 sections</strong> for this residency (from TM's seatManifest). The chart below shows section capacities. The teal bars = sections that appear in our best-available scrape (still have low-tier inventory). <strong>This is the denominator</strong> — pair it with availability data (next-iteration scrape) to get a real fill curve.</div>
+  <div class="chart-container"><canvas id="capacityChart"></canvas></div>
 
   <h3>Quickpick price distribution (all offers across all shows)</h3>
   <div class="meta">Distribution of all {len(all_quickpick_prices)} quickpick prices in the 14-day window, $10 buckets. Reveals the underlying tier structure of "best available" offers.</div>
@@ -296,27 +302,6 @@ if tm_seat:
   <h3>Section coverage (which sections appear most often in best-available)</h3>
   <div class="meta">Shows the sections feeding the "best available" pool — sections at the top of this list have the most unsold low-tier inventory across upcoming shows. (Premium sections rarely appear because they're not the cheapest tier.)</div>
   {section_table}
-
-  <h3>Quickpick stats across all shows ({len(all_quickpick_prices):,} scraped offers)</h3>
-  <div class="meta">These aggregate over <em>every</em> quickpick we've scraped (40-ish per show × 39 shows), not just the lowest price per show.</div>
-  <div class="stat-row" style="margin-top:8px;">
-    <div class="stat">
-      <div class="stat-label">Avg quickpick price (across all)</div>
-      <div class="stat-value">${avg_qp_avg:.0f}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Quickpick min / max</div>
-      <div class="stat-value">${overall_qp_min:.0f} / ${overall_qp_max:.0f}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Shows with price spread &gt; $0</div>
-      <div class="stat-value">{shows_with_spread} / {len(rows_per_event)}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Avg face max (premium ceiling)</div>
-      <div class="stat-value">${sum(r['face_max'] for r in rows_per_event if r['face_max'])/max(1,len([r for r in rows_per_event if r['face_max']])):.0f}+</div>
-    </div>
-  </div>
 
   <h3>Price spread per show (high − low of the 40 quickpicks)</h3>
   <div class="meta">Most shows show $0 spread (all 40 quickpicks at the same lowest tier). When this rises above $0, the lowest tier is starting to deplete and quickpicks include some higher-priced offers.</div>
@@ -607,44 +592,28 @@ if (D.schedule && D.schedule.months) {{
 if (D.tm_seat && D.tm_seat.extra) {{
   const x = D.tm_seat.extra;
 
-  // Time-of-day bar chart
-  new Chart(document.getElementById('todChart'), {{
+  // Section capacity chart — teal = sections in our best-available pool, grey = not
+  new Chart(document.getElementById('capacityChart'), {{
     type: 'bar',
     data: {{
-      labels: x.tod_labels.map(t => {{
-        const h = parseInt(t.slice(0,2));
-        return (h<12?h:(h-12||12)) + (h<12?'am':'pm');
-      }}),
+      labels: x.capacity_sections.map(s => 'Sec ' + s),
       datasets: [{{
-        label: 'Avg best-available ($)',
-        data: x.tod_avgs,
-        backgroundColor: '#2563eb',
+        label: 'Section capacity (seats)',
+        data: x.capacity_values,
+        backgroundColor: x.capacity_in_pool.map(b => b ? '#0891b2' : '#d4d4d4'),
       }}],
     }},
     options: {{
-      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
-        afterLabel: ctx => x.tod_counts[ctx.dataIndex] + ' shows'
-      }} }} }},
-      scales: {{ y: {{ beginAtZero: false, title: {{ display: true, text: '$' }} }} }},
-    }},
-  }});
-
-  // Weekday bar chart
-  new Chart(document.getElementById('wdChart'), {{
-    type: 'bar',
-    data: {{
-      labels: x.wd_labels,
-      datasets: [{{
-        label: 'Avg best-available ($)',
-        data: x.wd_avgs,
-        backgroundColor: '#059669',
-      }}],
-    }},
-    options: {{
-      plugins: {{ legend: {{ display: false }}, tooltip: {{ callbacks: {{
-        afterLabel: ctx => x.wd_counts[ctx.dataIndex] + ' shows'
-      }} }} }},
-      scales: {{ y: {{ beginAtZero: false, title: {{ display: true, text: '$' }} }} }},
+      plugins: {{
+        legend: {{ display: false }},
+        tooltip: {{ callbacks: {{
+          afterLabel: ctx => x.capacity_in_pool[ctx.dataIndex] ? 'In best-available pool' : 'Not in our quickpicks (either premium tier or sold out at lowest tier)'
+        }} }},
+      }},
+      scales: {{
+        y: {{ beginAtZero: true, title: {{ display: true, text: 'Seats' }} }},
+        x: {{ ticks: {{ font: {{ size: 10 }} }} }},
+      }},
     }},
   }});
 
